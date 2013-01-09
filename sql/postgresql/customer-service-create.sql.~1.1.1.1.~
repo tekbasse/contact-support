@@ -1,0 +1,352 @@
+-- customer-service-create.sql
+--
+-- @author Dekka Corp.
+-- @ported from OpenACS ecommerce package
+-- @license GNU GENERAL PUBLIC LICENSE, Version 2, June 1991
+-- @cvs-id
+--
+
+--------- customer service --------------------
+
+-- create sequence eccs_issue_id_seq;
+-- create view eccs_issue_id_sequence as select nextval('eccs_issue_id_seq') as nextval;
+-- create sequence eccs_action_id_seq;
+-- create view eccs_action_id_sequence as select nextval('eccs_action_id_seq') as nextval;
+-- create sequence eccs_interaction_id_seq;
+-- create view eccs_interaction_id_sequence as select nextval('eccs_interaction_id_seq') as nextval;
+-- create sequence eccs_user_ident_id_seq;
+-- create view eccs_user_ident_id_sequence as select nextval('eccs_user_ident_id_seq') as nextval;
+-- 
+-- -- this contains the bits of info a cs rep uses to identify
+-- -- a user
+-- -- often user_id is not known and the customer service rep
+-- -- will have to get other info in order to identify the user
+-- create table eccs_user_identification (
+--         user_identification_id  integer not null primary key,
+--         date_added      	timestamptz,
+--         user_id         	integer references users,
+--         email           	varchar(100),
+--         first_names     	varchar(100),
+--         last_name       	varchar(100),
+--         -- this is varchar(80) in community-core.sql, so I'll be consistent
+--         postal_code     	varchar(80),
+--         other_id_info   	varchar(2000)
+-- );
+-- 
+-- -- should index everything because this all columns may potentially
+-- -- be searched through every time a new interaction is recorded
+-- create index eccs_user_ident_by_user_id on eccs_user_identification(user_id);
+-- create index eccs_user_ident_by_email on eccs_user_identification(email);
+-- create index eccs_user_ident_by_first_names on eccs_user_identification(first_names);
+-- create index eccs_user_ident_by_last_name on eccs_user_identification(last_name);
+-- create index eccs_user_ident_by_postal_code on eccs_user_identification(postal_code);
+-- 
+-- 
+-- -- puts date_added into eccs_user_identification if it's missing
+-- create function eccs_user_identificate_date_tr ()
+-- returns opaque as '
+-- begin
+--         IF new.date_added is null THEN
+--                 new.date_added := now();
+--         END IF;
+-- 	return new;
+-- end;' language 'plpgsql';
+-- 
+-- create trigger eccs_user_identificate_date_tr
+-- after insert on eccs_user_identification
+-- for each row execute procedure eccs_user_identificate_date_tr ();
+-- 
+-- 
+-- create table eccs_customer_serv_interactions (
+--         interaction_id          integer not null primary key,
+--         customer_service_rep    integer references users,
+--         user_identification_id  integer not null 
+-- 				    references eccs_user_identification,
+--         interaction_date        timestamptz,
+--         interaction_originator  varchar(20) not null, -- e.g. customer, customer-service-rep, automatic
+--         interaction_type        varchar(30) not null, -- e.g. email, phone_call
+--         -- will be filled in if the customer-originated interaction is
+--         -- an email
+--         interaction_headers     varchar(4000)
+-- );
+-- 
+-- create index eccs_csin_by_user_ident_id on eccs_customer_serv_interactions(user_identification_id);
+-- 
+-- -- gilbertw - used the code in OpenACS 3.2.5 as a reference
+-- create function eccs_cs_interaction_inserts ()
+-- returns opaque as '
+-- begin
+--  IF new.interaction_date is null THEN 
+--     new.interaction_date := now();
+--  END IF;
+--  return new;
+-- end;' language 'plpgsql';
+-- 
+-- create trigger eccs_cs_interaction_inserts
+-- after insert on eccs_customer_serv_interactions
+-- for each row execute procedure eccs_cs_interaction_inserts ();
+-- 
+-- create view eccs_customer_service_reps
+-- as
+-- select * from cc_users 
+-- where user_id in (select customer_service_rep 
+-- 	from eccs_customer_serv_interactions)
+--    or user_id in (select issued_by from eccs_gift_certificates_issued);
+-- 
+-- create table eccs_customer_service_issues (
+--         issue_id        integer not null primary key,
+--         user_identification_id  integer not null references eccs_user_identification,
+--         -- may be null if this issue isn't associated with an order
+--         order_id        integer references eccs_orders,
+--         -- may be null if this issue isn't associated with a gift certificate
+--         gift_certificate_id     integer references eccs_gift_certificates,
+--         open_date       timestamptz not null,
+--         close_date      timestamptz,
+--         -- customer service reps who closed the issue
+--         closed_by       integer references users,
+--         -- we never really delete issues
+--         deleted_p       boolean default 'f'
+-- );
+-- 
+-- create index eccs_csi_by_user_ident_id on eccs_customer_service_issues(user_identification_id);
+-- create index eccs_csi_by_open_date on eccs_customer_service_issues(open_date);
+-- 
+-- -- because an issue can have more than one issue_type
+-- create table eccs_cs_issue_type_map (
+--         issue_id        integer not null references eccs_customer_service_issues,
+--         issue_type      varchar(40) not null -- e.g. billing, web site
+-- );
+-- 
+-- create index eccs_csitm_by_issue_id on eccs_cs_issue_type_map(issue_id);
+-- create index eccs_csitm_by_issue_type on eccs_cs_issue_type_map(issue_type);
+-- 
+-- -- gilbertw - used code OpenACS 3.2.5 as a reference
+-- -- removed INSERTING
+-- create function eccs_cs_issue_inserts ()
+-- returns opaque as '
+-- begin
+--  IF new.open_date is null THEN 
+--     new.open_date := now();
+--  END IF;
+--  return new;
+-- end;' language 'plpgsql';
+-- 
+-- create trigger eccs_cs_issue_inserts
+-- after insert on eccs_customer_service_issues
+-- for each row execute procedure eccs_cs_issue_inserts ();
+-- 
+-- create table eccs_customer_service_actions (
+--         action_id               integer not null primary key,
+--         issue_id                integer not null references eccs_customer_service_issues,
+--         interaction_id          integer not null references eccs_customer_serv_interactions,
+--         action_details          varchar(4000),
+--         follow_up_required      varchar(4000)
+-- );
+--         
+-- create index eccs_csa_by_issue on eccs_customer_service_actions(issue_id);
+-- 
+-- create table eccs_cs_action_info_used_map (
+--         action_id               integer not null references eccs_customer_service_actions,
+--         info_used               varchar(100) not null
+-- );
+-- 
+-- create index eccs_csaium_by_action_id on eccs_cs_action_info_used_map(action_id);
+-- create index eccs_csaium_by_info_used on eccs_cs_action_info_used_map(info_used);
+-- 
+-- -- this table contains picklist choices for the customer service data
+-- -- entry people
+-- 
+-- create sequence eccs_picklist_item_id_seq;
+-- create view eccs_picklist_item_id_sequence as select nextval('eccs_picklist_item_id_seq') as nextval;
+-- 
+-- create table eccs_picklist_items (
+--         picklist_item_id        integer not null primary key,
+--         -- pretty, human-readable
+--         picklist_item           varchar(100),
+--         -- which picklist this item is in
+--         picklist_name           varchar(100),
+--         sort_key                numeric,
+--         last_modified           timestamptz not null,
+--         last_modifying_user     integer not null references users,
+--         modified_ip_address     varchar(20) not null
+-- );
+-- 
+-- create table eccs_picklist_items_audit (
+--         picklist_item_id        integer,
+--         picklist_item           varchar(100),
+--         picklist_name           varchar(100),
+--         sort_key                numeric,
+--         last_modified           timestamptz,
+--         last_modifying_user     integer,
+--         modified_ip_address     varchar(20),
+--         delete_p                boolean default 'f'
+-- );
+-- 
+-- create function eccs_picklist_items_audit_tr ()
+-- returns opaque as '
+-- begin
+--         insert into eccs_picklist_items_audit (
+--         picklist_item_id, picklist_item,
+--         picklist_name, sort_key,
+--         last_modified,
+--         last_modifying_user, modified_ip_address
+--         ) values (
+--         old.picklist_item_id, old.picklist_item,
+--         old.picklist_name, old.sort_key,
+--         old.last_modified,
+--         old.last_modifying_user, old.modified_ip_address
+--         );
+-- 	return new;
+-- end;' language 'plpgsql';
+-- 
+-- create trigger eccs_picklist_items_audit_tr
+-- after update or delete on eccs_picklist_items
+-- for each row execute procedure eccs_picklist_items_audit_tr ();
+-- 
+-- -- Canned responses for customer support
+-- create sequence eccs_canned_response_id_seq;
+-- create view eccs_canned_response_id_sequence as select nextval('eccs_canned_response_id_seq') as nextval;
+-- 
+-- create table eccs_canned_responses (
+--         response_id     integer not null primary key,
+--         one_line        varchar(100) not null,
+--         response_text   varchar(4000) not null
+-- );
+-- 
+-- -----------------------------------------------
+-- 
+-- -- templates 1-6 are pre-defined (see the insert statements in 
+-- -- ecommerce-defaults.sql)
+-- -- the wording of each can be changed at [eccs_url_concat [eccs_url] /admin]/email-templates/
+-- create sequence eccs_email_template_id_seq start 7;
+-- create view eccs_email_template_id_sequence as select nextval('eccs_email_template_id_seq') as nextval;
+-- 
+-- create table eccs_email_templates (
+--         email_template_id       integer not null primary key,
+--         title                   varchar(100),
+--         subject                 varchar(200),
+--         message                 varchar(4000),
+--         -- this lists the variable names that customer service can
+--         -- use in this particular email -- for their info only
+--         variables               varchar(1000),
+--         -- for informational purposes only, when the email is
+--         -- sent
+--         when_sent               varchar(1000),
+--         -- for customer service issues, this is a tcl list of all
+--         -- the issue_types that should be inserted into 
+--         -- eccs_cs_issue_type_map for the issue that will be created
+--         -- when the message is sent
+--         issue_type_list         varchar(100),
+--         last_modified           timestamptz not null,
+--         last_modifying_user     integer not null references users,
+--         modified_ip_address     varchar(20) not null
+-- );
+-- 
+-- create table eccs_email_templates_audit (
+--         email_template_id       integer,
+--         title                   varchar(100),
+--         subject                 varchar(200),
+--         message                 varchar(4000),
+--         variables               varchar(1000),
+--         when_sent               varchar(1000),
+--         issue_type_list         varchar(100),
+--         last_modified           timestamptz,
+--         last_modifying_user     integer,
+--         modified_ip_address     varchar(20),
+--         delete_p                boolean default 'f' 
+-- );
+-- 
+-- create function eccs_email_templates_audit_tr ()
+-- returns opaque as '
+-- begin
+--         insert into eccs_email_templates_audit (
+--         email_template_id, title,
+--         subject, message,
+--         variables, when_sent,
+--         issue_type_list,
+--         last_modified,
+--         last_modifying_user, modified_ip_address
+--         ) values (
+--         old.email_template_id, old.title,
+--         old.subject, old.message,
+--         old.variables, old.when_sent,
+--         old.issue_type_list,
+--         old.last_modified,
+--         old.last_modifying_user, old.modified_ip_address
+--         );
+-- 	return new;
+-- end;' language 'plpgsql';
+-- 
+-- create trigger eccs_email_templates_audit_tr
+-- after update or delete on eccs_email_templates
+-- for each row execute procedure eccs_email_templates_audit_tr ();
+-- 
+-- -- 6 default templates are predefined ecommerce-defaults.
+-- -- The templates are
+-- -- used in procedures which send out the email, so the template_ids
+-- -- shouldn t be changed, although the text can be edited at
+-- -- [eccs_url_concat [eccs_url] /admin]/email-templates/
+-- --
+-- -- email_template_id    used for
+-- -- -----------------    ---------
+-- --      1               new order
+-- --      2               order shipped
+-- --      3               delayed credit denied
+-- --      4               new gift certificate order
+-- --      5               gift certificate recipient
+-- --      6               gift certificate order failure
+-- 
+-- 
+-- -- users can sign up for mailing lists based on category, subcategory,
+-- -- or subsubcategory (the appropriate level of categorization on which
+-- -- to base mailing lists depends on how the site administrator has
+-- -- set up their system)
+-- -- when the user is signed up for a subsubcategory list, the subcategory_id
+-- -- and category_id are also filled in (which makes it easier to refer
+-- -- to the mailing list later).
+-- -- cat stands for categorization
+-- 
+-- -- this table needs to be integrated with contacts and categories package and maybe spam users package
+-- 
+-- create table eccs_cat_mailing_lists (
+--         user_id                 integer not null references users,
+--         category_id             integer references eccs_categories,
+--         subcategory_id          integer references eccs_subcategories,
+--         subsubcategory_id       integer references eccs_subsubcategories
+-- );
+-- 
+-- create index eccs_cat_mailing_list_idx on eccs_cat_mailing_lists(user_id);
+-- create index eccs_cat_mailing_list_idx2 on eccs_cat_mailing_lists(category_id);
+-- create index eccs_cat_mailing_list_idx3 on eccs_cat_mailing_lists(subcategory_id);
+-- create index eccs_cat_mailing_list_idx4 on eccs_cat_mailing_lists(subsubcategory_id);
+-- 
+-- 
+-- 
+-- create sequence eccs_spam_id_seq;
+-- create view eccs_spam_id_sequence as select nextval('eccs_spam_id_seq') as nextval;
+-- 
+-- -- this table needs to be integrated with contacts package
+-- create table eccs_spam_log (
+--         spam_id                 integer not null primary key,
+--         spam_date               timestamptz,
+--         spam_text               varchar(4000),
+--         -- the following are all criteria used in choosing the users to be spammed
+--         mailing_list_category_id        integer references eccs_categories,
+--         mailing_list_subcategory_id     integer references eccs_subcategories,
+--         mailing_list_subsubcategory_id  integer references eccs_subsubcategories,
+--         user_class_id                   integer references eccs_user_classes,
+--         product_id                      integer references eccs_products,
+--         last_visit_start_date           timestamptz,
+--         last_visit_end_date             timestamp
+-- );
+-- 
+-- create index eccs_spam_log_by_cat_mail_idx on eccs_spam_log (mailing_list_category_id);
+-- create index eccs_spam_log_by_cat_mail_idx2 on eccs_spam_log (mailing_list_subcategory_id);
+-- create index eccs_spam_log_by_cat_mail_idx3 on eccs_spam_log (mailing_list_subsubcategory_id);
+-- create index eccs_spam_log_by_user_cls_idx on eccs_spam_log (user_class_id);
+-- create index eccs_spam_log_by_product_idx on eccs_spam_log (product_id);
+-- 
+-- 
+-- 
+-- 
+-- 
