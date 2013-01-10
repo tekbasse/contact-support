@@ -34,6 +34,7 @@ create table cs_ticket_messages (
 );
         
 
+ --aka canned_response table
 create table cs_message_templates (
     template_id      integer not null primary key,
     package_id       integer not null,
