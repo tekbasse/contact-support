@@ -28,6 +28,8 @@ ad_proc -private cs_customer_ids_for_user {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+    # Change this following line to whatever other package reference provides a list of customer_ids for user_id
+    set customer_id_list [list $user_id]
     return $customer_id_list
 }
 
