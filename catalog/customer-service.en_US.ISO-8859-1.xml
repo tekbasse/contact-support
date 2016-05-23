@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<message_catalog package_key="customer-service" package_version="0.1d" locale="en_US" charset="ISO-8859-1">
+<msg key="Created">Created</msg>
+<msg key="Customer_Service">Customer Service</msg>
+<msg key="ID">ID</msg>
+<msg key="Last_Modified">Last Modified</msg>
+<msg key="assign">assign</msg>
+<msg key="close">close</msg>
+<msg key="closed">closed</msg>
+<msg key="new_ticket">new_ticket</msg>
+<msg key="open">open</msg>
+<msg key="subscribe">subscribe</msg>
+<msg key="ticket">ticket</msg>
+<msg key="tickets">tickets</msg>
+<msg key="unassign">unassign</msg>
+<msg key="unsubscribe">unsubscribe</msg>
+</message_catalog>
