@@ -84,7 +84,7 @@ CREATE TABLE cs_message_templates (
     variables        text,
     message_content  text,
     created    timestamptz not null,
-    created_by integer,
+    created_by integer
 );
 
 create index cs_message_templates_template_id_idx on cs_message_templates(template_id);
