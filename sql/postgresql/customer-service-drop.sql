@@ -9,6 +9,24 @@
  -- or by average response time to opened tickets within (parameter period) and
  --business hours (parameter). 
 
+drop index cs_cat_assignment_map_user_id_idx;
+drop index cs_cat_assignment_map_category_id_idx;
+
+DROP TABLE cs_cat_assignment_map;
+
+drop index cs_ticket_rep_map_user_id_idx;
+drop index cs_ticket_rep_map_ticket_id_idx;
+
+DROP TABLE cs_ticket_rep_map;
+
+drop index cs_ticket_users_map_user_id_idx;
+drop index cs_ticket_users_map_ticket_id_idx;
+
+DROP TABLE cs_ticket_users_map; 
+
+
+
+
 drop index cs_categories_grouping_idx;
 drop index cs_categories_label_idx;
 drop index cs_categories_id_idx;

@@ -96,6 +96,8 @@ CREATE TABLE cs_categories (
     -- if this a sub category of another category, parent category_id
     parent_id        integer,
     instance_id      integer,
+    -- to sort categories
+    order_value      integer,
     label            varchar(80),
     grouping         varchar(20),
     active_p         varchar(1) default '1',
@@ -105,3 +107,35 @@ CREATE TABLE cs_categories (
 create index cs_categories_id_idx on cs_categories(id);
 create index cs_categories_label_idx on cs_categories(label);
 create index cs_categories_grouping_idx on cs_categories(grouping);
+
+-- ticket_id subscribers (users) map
+CREATE TABLE cs_ticket_users_map (
+       ticket_id     integer,
+       -- one record for each user that currently subscribes to ticket
+       user_id       integer
+);
+
+create index cs_ticket_users_map_ticket_id_idx on cs_ticket_users_map(ticket_id);
+create index cs_ticket_users_map_user_id_idx on cs_ticket_users_map(user_id);
+
+
+-- ticket_id cs_rep (admins) map
+CREATE TABLE cs_ticket_rep_map (
+       ticket_id     integer,
+       -- one record for each cs rep / admin that is currently assigned to ticket
+       user_id       integer
+);
+
+create index cs_ticket_rep_map_ticket_id_idx on cs_ticket_rep_map(ticket_id);
+create index cs_ticket_rep_map_user_id_idx on cs_ticket_rep_map(user_id);
+
+-- Answers question, who is automatically assigned by ticket of posted category
+CREATE TABLE cs_cat_assignment_map (
+       category_id   integer,
+       -- one record for each assigned user to a category
+       user_id       integer
+);
+
+create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);
+create index cs_cat_assignment_map_user_id_idx on cs_cat_assignment_map(user_id);
+
