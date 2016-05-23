@@ -8,7 +8,13 @@
  -- or by number of open tickets ahead (by parameter)
  -- or by average response time to opened tickets within (parameter period) and
  --business hours (parameter). 
-create table cs_tickets (
+
+CREATE SEQUENCE cs_id_seq start 10000;
+SELECT nextval ('hf_id_seq');
+
+
+
+CREATE TABLE cs_tickets (
     ticket_id           integer not null,
     instance_id         integer not null,
     customer_id         varchar(100),
@@ -31,8 +37,12 @@ create table cs_tickets (
     assigned_by         integer
 );
 
+create index cs_tickets_ticket_id_idx on cs_tickets (ticket_id);
+create index cs_tickets_instance_id_idx on cs_tickets (instance_id);
+create index cs_tickets_customer_id_idx on cs_tickets (customer_id);
 
-create table cs_ticket_messages (
+
+CREATE TABLE cs_ticket_messages (
   -- aka support_content.id
     post_id          integer not null,
     instance_id      integer not null,
@@ -53,24 +63,33 @@ create table cs_ticket_messages (
     -- space delimited list of cs representative user_ids.
     assigned_to      text,
     -- space delimited list of customer user_ids. Unsubscribing adds a message to that effect.
-    subscribed       text
+    subscribed       text,
+    trashed_p        varchar(1)
 );
-        
+
+create index cs_ticket_messages_ticket_id_idx on cs_ticket_messages(ticket_id);
+create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages(instance_id);
 
  --aka canned_response table
-create table cs_message_templates (
+CREATE TABLE cs_message_templates (
     template_id      integer not null primary key,
     instance_id      integer not null,
+    -- automatically inactivate old, and issue new tempalate_id
     active_p         varchar(1),
+    label            varchar(30),
     title            varchar(100),
     subject          varchar(200),
     -- this lists the variable names that customer service can
     -- use in this particular email -- for info only
     variables        text,
     message_content  text,
-    last_modified    timestamptz not null,
-    last_modified_by integer,
+    created    timestamptz not null,
+    created_by integer,
 );
+
+create index cs_message_templates_template_id_idx on cs_message_templates(template_id);
+create index cs_message_templates_instance_id_idx on cs_message_templates(instance_id);
+create index cs_message_templates_label_idx on cs_message_templates(label);
 
 CREATE TABLE cs_categories (
     id               integer not null,
@@ -83,3 +102,6 @@ CREATE TABLE cs_categories (
     description      text
 );
 
+create index cs_categories_id_idx on cs_categories(id);
+create index cs_categories_label_idx on cs_categories(label);
+create index cs_categories_grouping_idx on cs_categories(grouping);
