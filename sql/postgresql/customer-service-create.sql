@@ -10,7 +10,7 @@
  --business hours (parameter). 
 
 CREATE SEQUENCE cs_id_seq start 10000;
-SELECT nextval ('hf_id_seq');
+SELECT nextval ('cs_id_seq');
 
 
 
