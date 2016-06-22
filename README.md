@@ -28,9 +28,10 @@ Copyright (c) 2016 Benjamin Brink
 po box 20, Marylhurst, OR 97036-0020 usa
 email: tekbasse@yahoo.com
 
-Customer-Service is open source and published under the GNU General Public License, consistent with the OpenACS system: http://www.gnu.org/licenses/gpl.html
+Customer-Service is open source and published under the GNU General Public License, 
+consistent with the OpenACS system: http://www.gnu.org/licenses/gpl.html
 
-A local copy is available at q-wiki/www/doc/LICENSE.html
+A local copy is available at customer-service/www/doc/LICENSE.html
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
