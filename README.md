@@ -53,6 +53,8 @@ Tickets can be assigned to multiple users.
 
 Tickets can be subscribed by multiple representatives of a customer.
 
+Subscribers can respond via email.
+
 No UI javascript is used, so technologies with limited UI can use it.
 
 Capable of handling secure threads.
@@ -61,7 +63,9 @@ Tickets can be prioritized.
 
 Uses Q-Forms, and subsequently benefits from its features.
 
-This web-app is easily modifiable for custom deployments.
+Modifiable for custom deployments.
+
+
 
 
 
