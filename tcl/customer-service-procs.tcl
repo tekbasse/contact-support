@@ -23,7 +23,7 @@ ad_proc -private cs_customer_ids_for_user {
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]

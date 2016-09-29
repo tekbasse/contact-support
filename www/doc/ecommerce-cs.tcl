@@ -21,7 +21,7 @@ set user_id [auth::require_login]
 
 # Check for read privileges
 
-set package_id [ad_conn package_id]
+set package_id [qc_set_instance_id]
 set admin_p [ad_permission_p $package_id read]
 
 set package_name "Customer Service"
