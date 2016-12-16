@@ -49,17 +49,29 @@ A local copy is available at customer-service/www/doc/LICENSE.html
 features
 --------
 
-Tickets can be assigned to multiple users.
+Tickets can be assigned to multiple admin users.
+
+Assignments can be modified by any admin.
 
 Tickets can be subscribed by multiple representatives of a customer.
 
+Subscribers can remove themselves from subscription.
+
+Subscriber admins can subscribe others in their organization.
+
 Subscribers can respond via email.
+
+Subscriber shows ticket status as open or closed.
+Admin shows ticket status as open,closed, or:
+1.   waiting for a specific admin to respond (ticket shows as high priority / highlighted for them).
+2.   waiting for other nonspecific admin action
+3.   raise priority during a scheduled time period (deactivate at end of period, or manually by anyone)
 
 No UI javascript is used, so technologies with limited UI can use it.
 
 Capable of handling secure threads.
 
-Tickets can be prioritized.
+Tickets can be prioritized (triaged).
 
 Uses Q-Forms, and subsequently benefits from its features.
 
