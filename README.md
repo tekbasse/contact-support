@@ -61,11 +61,15 @@ Subscriber admins can subscribe others in their organization.
 
 Subscribers can respond via email.
 
-Subscriber shows ticket status as open or closed.
+Subscriber shows ticket status as open or closed independent of Admin after opening.
 Admin shows ticket status as open,closed, or:
 1.   waiting for a specific admin to respond (ticket shows as high priority / highlighted for them).
 2.   waiting for other nonspecific admin action
 3.   raise priority during a scheduled time period (deactivate at end of period, or manually by anyone)
+
+By having independent status for Admin and clients, 
+each can close ticket depending on if something is actionable on their "side".
+No false flags to haunt actions-to-take lists.
 
 No UI javascript is used, so technologies with limited UI can use it.
 
