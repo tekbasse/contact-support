@@ -1,0 +1,20 @@
+#customer-service/www/index.vuh
+
+#notes
+# if user has access to multiple customer_ids,
+# internal-redirect to www/customers  (choose customer)
+
+
+# otherwise redirect to tickets page:
+
+# if user has open tickets
+# show open tickets
+
+# otherwise show new ticket form
+
+
+#links to show open|closed tickets
+# order by date or topic, search content for keyword/topic
+
+
+

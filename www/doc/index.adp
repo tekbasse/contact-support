@@ -29,3 +29,11 @@ email: tekbasse@yahoo.com</pre>
 Documentation from original <a href="ecommerce-cs">ecommerce customer-service feature</a> (for reference only)
 </li>
 </ul>
+
+<h3>features (requested)</h3>
+
+<ul><li>
+tickets automatically alert to those assigned by tag/category
+</li><li>
+replies to email notifications are posted to ticket.
+</li><li>
