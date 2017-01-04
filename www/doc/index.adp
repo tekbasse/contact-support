@@ -33,7 +33,17 @@ Documentation from original <a href="ecommerce-cs">ecommerce customer-service fe
 <h3>features (requested)</h3>
 
 <ul><li>
-tickets automatically alert to those assigned by tag/category
+tickets automatically alert to those assigned by tag/category or q-control package's company role.
 </li><li>
 replies to email notifications are posted to ticket.
 </li><li>
+ticket state (open/closed) is somewhat independent between support team and customers
+</li><li>
+URL to ticket or ticket/message
+</li><li>
+ticket thread has reference by ticket#/message# or ticket_nbr-message_nbr.
+</li><li>
+ticket number is unqiue alphanumeric reference to hide system ticket number, based on open timestamp.
+</li><li>
+create a feedback package to integrate reviews of service..
+</li></ul>
