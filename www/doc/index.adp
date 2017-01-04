@@ -46,4 +46,8 @@ ticket thread has reference by ticket#/message# or ticket_nbr-message_nbr.
 ticket number is unqiue alphanumeric reference to hide system ticket number, based on open timestamp.
 </li><li>
 create a feedback package to integrate reviews of service..
+</li><li>
+Show stats (avg/min/max)  response time over day/week/year
+</li><li>
+Show graph of UTC time in week when responses are made.
 </li></ul>
