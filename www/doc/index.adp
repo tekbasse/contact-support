@@ -47,7 +47,9 @@ ticket number is unqiue alphanumeric reference to hide system ticket number, bas
 </li><li>
 create a feedback package to integrate reviews of service..
 </li><li>
-Show stats (avg/min/max)  response time over day/week/year
+Show stats (avg/min/max) response time over day/week/year of customer as well as support to antcipate response timing.
 </li><li>
-Show graph of UTC time in week when responses are made.
+Show stats (avg/min/max) time to final ticket closing to help anticipate total down/recovery time.
+</li><li>
+Show graph of UTC time-in-day and time-in-week when responses are made of customer as well as support to anticipate response timing.
 </li></ul>
