@@ -52,4 +52,8 @@ Show stats (avg/min/max) response time over day/week/year of customer as well as
 Show stats (avg/min/max) time to final ticket closing to help anticipate total down/recovery time.
 </li><li>
 Show graph of UTC time-in-day and time-in-week when responses are made of customer as well as support to anticipate response timing.
+</li><li>
+Send notification to subset of clients. (Later. Will have to integrate with other packages that define groups)
+</li><li>
+Post a notification on ticket window when other users may be affected.. to minimize tikets associated with a system wide issue. (click a button to be notified when issue is resolved).
 </li></ul>
