@@ -25,6 +25,25 @@ CREATE TABLE cs_customer_ref_id_map (
     customer_id integer not null
 );
 
+CREATE TABLE cs_announcements (
+    id     integer,
+    -- Currently three types: 
+    -- 1. BOLO (be on lookout for..)
+    --         Only associated with set of customer_id / cs_user_map
+    --         Not added to any ticket history.
+    --         Shown in customer-service user pages until expired or manually expired.
+    -- 2. MEMO 
+    --         Added to ticket history for each customer_ref, and notifications sent.
+    -- 3. TO        
+    type   varchar(8),
+    -- If associated with a ticket id
+    ticket_id integer,
+    -- If expires
+    expire_timestamp timestamptz,
+    -- state of announcement
+    expired_p varchar(1)
+);
+
 CREATE TABLE cs_tickets (
     ticket_id           integer not null,
     instance_id         integer not null,
@@ -62,7 +81,11 @@ CREATE TABLE cs_ticket_action_log (
     instance_id      integer not null,
     -- for delegating/screening/escalating
     -- app note. When these change, log to internal_notes in a new cs_ticket_message
-    rep_ids            text,
+
+    -- cs_rep_ids and customer_user_ids should 
+    -- note actual subscriptions, not the changed ones.
+    cs_rep_ids            text,
+    customer_user_ids     text,
     -- a = assigned
     -- d = dropped
     -- c = closed
@@ -96,9 +119,13 @@ CREATE TABLE cs_ticket_messages (
     -- and actions, such as ticket status changes, cgi vars passed in a form, as well
     -- as internal notes for ticket solvers etc.
     internal_notes   text,
-    -- space delimited list of cs representative user_ids.
+    -- A space delimited list of initial cs representative user_ids.
+    -- Unsubscribing adds a message to that effect.
+    -- Use cs_ticket_rep_map for current ones.
     assigned_to      text,
-    -- space delimited list of customer user_ids. Unsubscribing adds a message to that effect.
+    -- A space delimited list of initial customer user_ids. 
+    -- Unsubscribing adds a message to that effect.
+    -- Use cs_ticket_users_map for current ones.
     subscribed       text,
     trashed_p        varchar(1)
 );

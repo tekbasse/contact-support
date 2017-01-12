@@ -53,12 +53,20 @@ Show stats (avg/min/max) time to final ticket closing to help anticipate total d
 </li><li>
 Show graph of UTC time-in-day and time-in-week when responses are made of customer as well as support to anticipate response timing.
 </li><li>
-Send message / notification to subset of customers by customer_ref. 
+Send announcement / notification to subset of customers by customer_ref. 
+<pre>
 Record notification in customer ticket history.
-Notification should have an expiration with it. 
+Announcement may have an expiration with it. 
 If before expiration, present in customer_ref web pages with hide by user_id.
+</pre>
 </li><li>
-Post a notification on ticket window when other users may be affected 
+Post an announcement on customer-service pages without notification when other users may be affected. 
+<pre>
 --to minimize tickets associated with a system wide issue. 
 (click a button to be notified when issue is resolved).
+This kind of announcement is not registered in a customer's ticket logs.
+Active announcements of this type appear on admin pages, and 
+is associated with a ticket, so that it can be automatically expired when ticket closes,
+or manually expired by a cs rep.
+</pre>
 </li></ul>
