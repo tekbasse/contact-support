@@ -20,6 +20,7 @@ CREATE TABLE cs_ticket_ref_id_map (
 
 create index cs_ticket_ref_id_map_ref_idx on cs_ticket_ref_id_map (t_ref);
 create index cs_ticket_ref_id_map_id_idx on cs_ticket_ref_id_map (id);
+create index cs_ticket_ref_id_map_instance_idx on cs_ticket_ref_id_map (instance_id);
 
 CREATE TABLE cs_customer_ref_id_map (
     instance_id         integer not null,
@@ -29,7 +30,7 @@ CREATE TABLE cs_customer_ref_id_map (
 
 create index cs_customer_ref_id_map_ref_idx on cs_customer_ref_id_map (c_ref);
 create index cs_customer_ref_id_map_id_idx on cs_customer_ref_id_map (id);
-
+create index cs_customer_ref_id_map_instance_id_idx on cs_customer_ref_id_map (instance_id);
 
 CREATE TABLE cs_announcements (
     instance_id         integer not null,
@@ -58,9 +59,25 @@ CREATE TABLE cs_announcements (
 create index cs_announcements_id_idx on cs_announcements (id);
 create index cs_announcements_ticket_id_idx on cs_announcements (ticket_id);
 create index cs_announcements_expire_ts_idx on cs_announcements (expire_timestamp);
-create index cs_announcements_expired_p on cs_announcements (expired_p);
+create index cs_announcements_expired_p_idx on cs_announcements (expired_p);
+create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
 
-CREATE TABLE cs_tickets (
+ -- terminology:   SST = support ticket state (open/closed)
+ --                CST = customer ticket state (open/closed)
+ -- When customer opens ticket, both CST and SST are opened for triage.
+ -- When customer closes ticket, both CST and SST are closed.
+ -- When support closes ticket, both CST and SST are closed
+ -- When customer re-opens ticket or replies to ticket, ticket is triaged again by first tier.
+ -- When support triages ticket, and more info needed by customer,
+ --      ticket is SST is closed, CST remains open.
+ -- When support triages new ticket, 
+ --      qualified ticket remains open for both CST & SST.
+ --      support categories and assigns ticket to a tier level and priority if different than default.
+ -- When support triages a previously closed ticket,
+ --      qualified ticket remains open for both CST & SST, and notifications sent to previously assigned reps.
+ --      otherwise SST is closed (with message sent to customer stating no support response needed).
+ --      Customer asked to close CST ticket when they are finished with the topic internally.
+ CREATE TABLE cs_tickets (
     ticket_id           integer not null,
     instance_id         integer not null,
     customer_id         integer not null,
@@ -69,10 +86,18 @@ CREATE TABLE cs_tickets (
     ticket_category_id  varchar(100),
     current_tier_level  integer,
     subject             varchar(100),
+    -- ticket state for support.
+    -- Cannot rely on date, because cs_time_closed may exist from prior closing of ticket
+    -- if for example cs_time_opened is after cs_time_closed
+    cs_open_p           integer,
     opened_by           integer not null,
     cs_time_opened      timestamptz not null,
     cs_time_closed      timestamptz,
     cs_closed_by        integer,
+    -- ticket state for customers.
+    -- Cannot rely on date, because user_time_closed may exist from prior closing of ticket
+    -- if for example user_time_opened is after user_time_closed
+    user_open_p         integer,
     user_time_opened    timestamptz not null,
     user_time_closed    timestamptz,
     user_closed_by      integer,
@@ -88,6 +113,10 @@ CREATE TABLE cs_tickets (
 
 create index cs_tickets_ticket_id_idx on cs_tickets (ticket_id);
 create index cs_tickets_instance_id_idx on cs_tickets (instance_id);
+create index cs_tickets_cs_open_p_idx on cs_tickets (cs_open_p);
+create index cs_tickets_user_open_p_idx on cs_tickets (user_open_p);
+create index cs_tickets_trashed_p_idx on cs_tickets (trashed_p);
+
 
 CREATE TABLE cs_ticket_stats (
     instance_id         integer not null,
@@ -101,6 +130,10 @@ CREATE TABLE cs_ticket_stats (
     -- This is time to final ticket closing to help anticipate recovery time
     cs_final_response_s integer
 );
+ -- need an index on ticket_id so value can be updated as ticket evolves.
+create index cs_ticket_stats_ticket_id_idx on cs_ticket_stats (ticket_id);
+create index cs_ticket_stats_instance_id_idx on cs_ticket_stats (instance_id);
+
 
 CREATE TABLE cs_ticket_action_log (
     ticket_id          integer not null,
@@ -112,10 +145,15 @@ CREATE TABLE cs_ticket_action_log (
     -- note actual subscriptions, not the changed ones.
     cs_rep_ids         text,
     customer_user_ids  text,
+    -- These could change:
     -- a = assigned
     -- d = dropped
-    -- c = closed
-    op_type            varchar(2),
+    -- c = re/closed
+    -- o = re/opened
+    -- 
+    -- position 0 = cs_reps side
+    -- position 1 = customer side
+    op_type            varchar(8),
     -- operation initiated by (user_id of rep), or
     -- instance_id = assigned by software (package_id ie object_id)
     op_by              integer,
@@ -159,6 +197,8 @@ CREATE TABLE cs_ticket_messages (
 
 create index cs_ticket_messages_ticket_id_idx on cs_ticket_messages(ticket_id);
 create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages(instance_id);
+create index cs_ticket_messages_trashed_p_idx on cs_ticket_messages(trashed_p);
+create index cs_ticket_messages_post_id_idx on cs_ticket_messages(post_id);
 
 CREATE TABLE cs_customer_stats (
     instance_id      integer not null,
@@ -186,6 +226,10 @@ CREATE TABLE cs_customer_stats (
     time_m              integer,
 
 );
+
+create index cs_customer_stats_ticket_id_idx on cs_customer_stats(ticket_id);
+create index cs_customer_stats_instance_id_idx on  cs_customer_stats(instance_id);
+create index cs_customer_stats_customer_id_idx on cs_customer_stats(customer_id);
 
  --aka canned_response table
 CREATE TABLE cs_message_templates (
@@ -222,6 +266,7 @@ CREATE TABLE cs_categories (
     description      text
 );
 
+create index cs_categories_instance_id_idx on cs_categories(instance_id);
 create index cs_categories_id_idx on cs_categories(id);
 create index cs_categories_label_idx on cs_categories(label);
 create index cs_categories_grouping_idx on cs_categories(grouping);
@@ -234,6 +279,7 @@ CREATE TABLE cs_ticket_users_map (
        user_id       integer
 );
 
+create index cs_ticket_users_map_instance_id_idx on cs_ticket_users_map(instance_id);
 create index cs_ticket_users_map_ticket_id_idx on cs_ticket_users_map(ticket_id);
 create index cs_ticket_users_map_user_id_idx on cs_ticket_users_map(user_id);
 
@@ -248,6 +294,7 @@ CREATE TABLE cs_ticket_reps_map (
 
 create index cs_ticket_rep_map_ticket_id_idx on cs_ticket_rep_map(ticket_id);
 create index cs_ticket_rep_map_user_id_idx on cs_ticket_rep_map(user_id);
+create index cs_ticket_rep_map_instance_id_idx on cs_ticket_rep_map(instance_id);
 
 -- Answers question, who is automatically assigned by ticket of posted category
 CREATE TABLE cs_cat_assignment_map (
@@ -258,7 +305,7 @@ CREATE TABLE cs_cat_assignment_map (
        -- and / or references to q-control roles for example.
        group_refs    text
 );
-
+create index cs_cat_assignment_map_instance_id_idx on cs_cat_assignment_map(instance_id);
 create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);
 create index cs_cat_assignment_map_user_id_idx on cs_cat_assignment_map(user_id);
 
