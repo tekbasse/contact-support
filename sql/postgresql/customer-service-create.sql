@@ -22,11 +22,11 @@ create index cs_ticket_ref_id_map_id_idx on cs_ticket_ref_id_map (id);
 
 CREATE TABLE cs_customer_ref_id_map (
     customer_ref varchar(100),
-    customer_id integer not null
+    customer_id  integer not null
 );
 
 CREATE TABLE cs_announcements (
-    id     integer,
+    id                    integer,
     -- Currently three types: 
     -- 1. BOLO (be on lookout for..)
     --         Only associated with set of customer_id / cs_user_map
@@ -37,13 +37,14 @@ CREATE TABLE cs_announcements (
     -- 3. LOG 
     --         Added to internal ticket history for each customer_ref. 
     --         Customers not notified or shown.
-    type   varchar(8),
+    type                  varchar(8),
     -- If associated with a ticket id
-    ticket_id integer,
+    ticket_id             integer,
     -- If expires
-    expire_timestamp timestamptz,
+    expire_timestamp      timestamptz,
     -- state of announcement
-    expired_p varchar(1)
+    on_expire_notify_uids text,
+    expired_p             varchar(1)
 );
 
 CREATE TABLE cs_tickets (
@@ -93,7 +94,7 @@ CREATE TABLE cs_ticket_action_log (
     -- a = assigned
     -- d = dropped
     -- c = closed
-    op_type            varchar(2),
+    op_type               varchar(2),
     -- operation initiated by (user_id of rep), or
     -- instance_id = assigned by software (package_id ie object_id)
     op_by         integer,
@@ -130,7 +131,7 @@ CREATE TABLE cs_ticket_messages (
     -- Use cs_ticket_users_map for current ones.
     subscribed       text,
     -- Is this a log / note for internal view/use only?
-    internal_p          varchar(1),
+    internal_p       varchar(1),
     trashed_p        varchar(1)
 );
 
@@ -138,8 +139,8 @@ create index cs_ticket_messages_ticket_id_idx on cs_ticket_messages(ticket_id);
 create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages(instance_id);
 
 CREATE TABLE cs_customer_stats (
-    customer_id         integer,
-    ticket_id           integer,
+    customer_id      integer,
+    ticket_id        integer,
     -- The cs message_id might not be the prior id in a sequence.
     -- Customer might post multiple messages between responses
     -- from cs.
@@ -176,8 +177,8 @@ CREATE TABLE cs_message_templates (
     -- use in this particular email -- for info only
     variables        text,
     message_content  text,
-    created    timestamptz not null,
-    created_by integer
+    created          timestamptz not null,
+    created_by       integer
 );
 
 create index cs_message_templates_template_id_idx on cs_message_templates(template_id);
@@ -191,8 +192,8 @@ CREATE TABLE cs_categories (
     instance_id      integer,
     -- to sort categories
     order_value      integer,
-    label            varchar(80),
-    grouping         varchar(20),
+    label            varchar(40),
+    name             varchar(80),
     active_p         varchar(1) default '1',
     description      text
 );
@@ -213,7 +214,7 @@ create index cs_ticket_users_map_user_id_idx on cs_ticket_users_map(user_id);
 
 
 -- ticket_id cs_rep (admins) map
-CREATE TABLE cs_ticket_rep_map (
+CREATE TABLE cs_ticket_reps_map (
        ticket_id     integer,
        -- one record for each cs rep / admin that is currently assigned to ticket
        user_id       integer
@@ -225,8 +226,10 @@ create index cs_ticket_rep_map_user_id_idx on cs_ticket_rep_map(user_id);
 -- Answers question, who is automatically assigned by ticket of posted category
 CREATE TABLE cs_cat_assignment_map (
        category_id   integer,
-       -- one record for each assigned user to a category
-       user_id       integer
+       -- one record for each category
+       user_id       integer,
+       -- and / or references to q-control roles for example.
+       group_refs    text
 );
 
 create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);
