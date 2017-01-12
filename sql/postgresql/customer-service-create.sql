@@ -34,7 +34,9 @@ CREATE TABLE cs_announcements (
     --         Shown in customer-service user pages until expired or manually expired.
     -- 2. MEMO 
     --         Added to ticket history for each customer_ref, and notifications sent.
-    -- 3. TO        
+    -- 3. LOG 
+    --         Added to internal ticket history for each customer_ref. 
+    --         Customers not notified or shown.
     type   varchar(8),
     -- If associated with a ticket id
     ticket_id integer,
@@ -58,10 +60,12 @@ CREATE TABLE cs_tickets (
     cs_time_closed      timestamptz,
     user_time_opened    timestamptz not null,
     user_time_closed    timestamptz,
-    -- a number, 0 no privacy requirements
-    --           5 requires ssl to see, no content via notifications
-    --           9 don't show to anyone but submitter via ssl
+    -- a number, 0 Minimal privacy requirements
+    --           5 Requires ssl to see, no content via notifications.
+    --           9 Don't show to anyone but submitter via ssl.
+    --             Useful in matters of triage, such as rejecting a ticket.
     privacy_level       varchar(1),
+    -- Is this ticket trashed?
     trashed_p           varchar(1),
     priority            integer
 );
@@ -111,9 +115,7 @@ CREATE TABLE cs_ticket_messages (
     post_time        timestamptz not null,
   -- aka support_content.details
     message          text,
-    -- a number, 0 no privacy requirements
-    --           5 requires ssl to see, no content via notifications
-    --           9 don't show to anyone but submitter via ssl
+    --             See cs_tickets for more details.
     privacy_level    varchar(1),
     -- internal notes includes the values of variable_names_avail, if any;
     -- and actions, such as ticket status changes, cgi vars passed in a form, as well
@@ -127,6 +129,8 @@ CREATE TABLE cs_ticket_messages (
     -- Unsubscribing adds a message to that effect.
     -- Use cs_ticket_users_map for current ones.
     subscribed       text,
+    -- Is this a log / note for internal view/use only?
+    internal_p          varchar(1),
     trashed_p        varchar(1)
 );
 
