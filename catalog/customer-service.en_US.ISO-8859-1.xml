@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<message_catalog package_key="customer-service" package_version="0.1d" locale="en_US" charset="ISO-8859-1">
+<message_catalog package_key="customer-service" package_version="0.010" locale="en_US" charset="ISO-8859-1">
 <msg key="Created">Created</msg>
-<msg key="Customer_Service">Customer Service</msg>
+<msg key="Customer_eSrvice">Customer Service</msg>
+<msg key="customer_service">Customer Service</msg>
 <msg key="ID">ID</msg>
 <msg key="Last_Modified">Last Modified</msg>
 <msg key="assign">assign</msg>
