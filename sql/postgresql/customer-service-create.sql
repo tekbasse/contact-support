@@ -12,29 +12,65 @@
 CREATE SEQUENCE cs_id_seq start 10000;
 SELECT nextval ('cs_id_seq');
 
+CREATE TABLE cs_ticket_ref_id_map (
+    ref varchar(200) not null,
+    id  integer not null
+); 
 
+create index cs_ticket_ref_id_map_ref_idx on cs_ticket_ref_id_map (ref);
+create index cs_ticket_ref_id_map_id_idx on cs_ticket_ref_id_map (id);
+
+CREATE TABLE cs_customer_ref_id_map (
+    customer_ref varchar(100),
+    customer_id integer not null
+);
 
 CREATE TABLE cs_tickets (
     ticket_id           integer not null,
     instance_id         integer not null,
-    customer_id         varchar(100),
+    customer_id         integer not null,
  -- authenticated_by is handy for indirect posts (such as via call center operator)
     authenticated_by    varchar(40),
     ticket_category_id  varchar(100),
+    current_tier_level  integer,
     subject             varchar(100),
-    opened_by           integer,
-    time_opened         timestamptz not null,
-    time_closed         timestamptz,
+    opened_by           integer not null,
+    cs_time_opened      timestamptz not null,
+    cs_time_closed      timestamptz,
+    user_time_opened    timestamptz not null,
+    user_time_closed    timestamptz,
     -- a number, 0 no privacy requirements
     --           5 requires ssl to see, no content via notifications
     --           9 don't show to anyone but submitter via ssl
     privacy_level       varchar(1),
     trashed_p           varchar(1),
-    priority            integer,
-   -- for delegating/screening/escalating
-   -- app note. When these change, log to internal_notes in a new cs_ticket_message
-    assigned_to         text,
-    assigned_by         integer
+    priority            integer
+);
+
+CREATE TABLE cs_ticket_stats (
+    ticket_id           integer not null,
+    cs_first_response_s integer,
+    -- This is time to final ticket closing to help anticipate recovery time
+    cs_final_response_s integer,
+    -- useful to help segment response depending on triaged/assigned tier_level
+    -- tier_level might be automatically initally triaged based on ticket_category_id
+    cs_final_tier_level integer
+);
+
+CREATE TABLE cs_ticket_action_log (
+    ticket_id        integer not null,
+    instance_id      integer not null,
+    -- for delegating/screening/escalating
+    -- app note. When these change, log to internal_notes in a new cs_ticket_message
+    rep_ids            text,
+    -- a = assigned
+    -- d = dropped
+    -- c = closed
+    op_type            varchar(2),
+    -- operation initiated by (user_id of rep), or
+    -- instance_id = assigned by software (package_id ie object_id)
+    op_by         integer,
+    op_time       timestampz default now()
 );
 
 create index cs_tickets_ticket_id_idx on cs_tickets (ticket_id);
@@ -69,6 +105,28 @@ CREATE TABLE cs_ticket_messages (
 
 create index cs_ticket_messages_ticket_id_idx on cs_ticket_messages(ticket_id);
 create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages(instance_id);
+
+CREATE TABLE cs_customer_stats (
+    customer_id  integer,
+    ticket_id integer,
+    -- The cs message_id might not be the prior id in a sequence.
+    -- Customer might post multiple messages between responses
+    -- from cs.
+    cs_message_id integer,
+    message_id integer,
+    duration_to_reply_s integer,
+    -- Day of week of customer reply. Hint:
+    -- clock format \clock seconds\ -format %w (or %u)
+    -- 0 = Sunday, 1 = monday, 6 = saturday, 7 = sunday
+    -- use int(fmod(%w or %u, 7)) to standardize Sundays to 0.
+    weekday_n        integer,
+    -- time of day in decimal hours from 0:00am ie H+ M*100/60.
+    -- Hint:
+    -- set hm_list \clock format \clock seconds\ -format "%H %M"\ 
+    -- set hour_integer \expr \lindex hm 0\ + \lindex hm 1\ * 5 / 3
+    time_m integer,
+
+);
 
  --aka canned_response table
 CREATE TABLE cs_message_templates (
