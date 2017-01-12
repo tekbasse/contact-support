@@ -107,24 +107,28 @@ create index cs_ticket_messages_ticket_id_idx on cs_ticket_messages(ticket_id);
 create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages(instance_id);
 
 CREATE TABLE cs_customer_stats (
-    customer_id  integer,
-    ticket_id integer,
+    customer_id         integer,
+    ticket_id           integer,
     -- The cs message_id might not be the prior id in a sequence.
     -- Customer might post multiple messages between responses
     -- from cs.
-    cs_message_id integer,
-    message_id integer,
+    -- cs_message_id and message_id are the reference points
+    -- for calculating duration_to_reply_s
+    cs_message_id       integer,
+    message_id          integer,
     duration_to_reply_s integer,
     -- Day of week of customer reply. Hint:
     -- clock format \clock seconds\ -format %w (or %u)
     -- 0 = Sunday, 1 = monday, 6 = saturday, 7 = sunday
     -- use int(fmod(%w or %u, 7)) to standardize Sundays to 0.
-    weekday_n        integer,
-    -- time of day in decimal hours from 0:00am ie H+ M*100/60.
+    weekday_n           integer,
+    -- time of day in divided into 144 ten minute segments.
+    -- That is %H hour time * 6 + %M minutes after hour / 10
+
     -- Hint:
     -- set hm_list \clock format \clock seconds\ -format "%H %M"\ 
-    -- set hour_integer \expr \lindex hm 0\ + \lindex hm 1\ * 5 / 3
-    time_m integer,
+    -- set time_m \expr \lindex hm 0\ * 6 + \lindex hm 1\ / 10 \
+    time_m              integer,
 
 );
 
