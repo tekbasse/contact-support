@@ -1,6 +1,6 @@
 -- customer-service-create.sql
 --
--- @license GNU GENERAL PUBLIC LICENSE, Version 3
+-- @license GNU GENERAL PUBLIC LICENSE, Version 2
 
  -- instead of support_request.sequence_value which tracks sequential number
  -- of tickets opened per day,
@@ -13,7 +13,7 @@ CREATE SEQUENCE cs_id_seq start 10000;
 SELECT nextval ('cs_id_seq');
 
 CREATE TABLE cs_ticket_ref_id_map (
-    instance_id         integer not null,
+    instance_id         integer,
     t_ref varchar(200) not null,
     id  integer not null
 ); 
@@ -23,9 +23,9 @@ create index cs_ticket_ref_id_map_id_idx on cs_ticket_ref_id_map (id);
 create index cs_ticket_ref_id_map_instance_idx on cs_ticket_ref_id_map (instance_id);
 
 CREATE TABLE cs_customer_ref_id_map (
-    instance_id         integer not null,
-    c_ref varchar(100),
-    id  integer not null
+    instance_id           integer,
+    c_ref                 varchar(100),
+    id                    integer not null
 );
 
 create index cs_customer_ref_id_map_ref_idx on cs_customer_ref_id_map (c_ref);
@@ -33,7 +33,7 @@ create index cs_customer_ref_id_map_id_idx on cs_customer_ref_id_map (id);
 create index cs_customer_ref_id_map_instance_id_idx on cs_customer_ref_id_map (instance_id);
 
 CREATE TABLE cs_announcements (
-    instance_id         integer not null,
+    instance_id           integer,
     id                    integer,
     -- Currently three types: 
     -- 1. BOLO (be on lookout for..)
@@ -79,7 +79,7 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
  --      Customer asked to close CST ticket when they are finished with the topic internally.
  CREATE TABLE cs_tickets (
     ticket_id           integer not null,
-    instance_id         integer not null,
+    instance_id         integer,
     customer_id         integer not null,
  -- authenticated_by is handy for indirect posts (such as via call center operator)
     authenticated_by    varchar(40),
@@ -89,7 +89,7 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     -- ticket state for support.
     -- Cannot rely on date, because cs_time_closed may exist from prior closing of ticket
     -- if for example cs_time_opened is after cs_time_closed
-    cs_open_p           integer,
+    cs_open_p           varchar(1),
     opened_by           integer not null,
     cs_time_opened      timestamptz not null,
     cs_time_closed      timestamptz,
@@ -97,7 +97,7 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     -- ticket state for customers.
     -- Cannot rely on date, because user_time_closed may exist from prior closing of ticket
     -- if for example user_time_opened is after user_time_closed
-    user_open_p         integer,
+    user_open_p         varchar(1),
     user_time_opened    timestamptz not null,
     user_time_closed    timestamptz,
     user_closed_by      integer,
@@ -108,10 +108,14 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     privacy_level       varchar(1),
     -- Is this ticket trashed?
     trashed_p           varchar(1),
+    -- Some ticket trackers lock a ticket to prevent reopening.
+    -- Customers should be allowed to post more info for their own contextual notes.
+    ignore_reopen_p     varchar(1),
     priority            integer
 );
 
 create index cs_tickets_ticket_id_idx on cs_tickets (ticket_id);
+create index cs_tickets_customer_id_idx on cs_tickets (customer_id);
 create index cs_tickets_instance_id_idx on cs_tickets (instance_id);
 create index cs_tickets_cs_open_p_idx on cs_tickets (cs_open_p);
 create index cs_tickets_user_open_p_idx on cs_tickets (user_open_p);
@@ -119,7 +123,7 @@ create index cs_tickets_trashed_p_idx on cs_tickets (trashed_p);
 
 
 CREATE TABLE cs_ticket_stats (
-    instance_id         integer not null,
+    instance_id         integer,
     -- There can be more than one stat per ticket, because
     -- stats are kept for each tier level
     ticket_id           integer not null,
@@ -137,7 +141,7 @@ create index cs_ticket_stats_instance_id_idx on cs_ticket_stats (instance_id);
 
 CREATE TABLE cs_ticket_action_log (
     ticket_id          integer not null,
-    instance_id        integer not null,
+    instance_id        integer,
     -- for delegating/screening/escalating
     -- app note. When these change, log to internal_notes in a new cs_ticket_message
 
@@ -157,19 +161,17 @@ CREATE TABLE cs_ticket_action_log (
     -- operation initiated by (user_id of rep), or
     -- instance_id = assigned by software (package_id ie object_id)
     op_by              integer,
-    op_time            timestampz default now()
+    op_time            timestamptz default now()
 );
 
-create index cs_tickets_ticket_id_idx on cs_tickets (ticket_id);
-create index cs_tickets_instance_id_idx on cs_tickets (instance_id);
-create index cs_tickets_customer_id_idx on cs_tickets (customer_id);
+create index cs_ticket_action_log_ticket_id_idx on cs_ticket_action_log (ticket_id);
+create index cs_ticket_action_log_instance_id_idx on cs_ticket_action_log (instance_id);
 
 
 CREATE TABLE cs_ticket_messages (
-    instance_id      integer not null,
+    instance_id      integer,
   -- aka support_content.id
     post_id          integer not null,
-    instance_id      integer not null,
   -- aka support_content.support_request_id
     ticket_id        integer not null,
     posted_by        integer not null,
@@ -195,13 +197,13 @@ CREATE TABLE cs_ticket_messages (
     trashed_p        varchar(1)
 );
 
-create index cs_ticket_messages_ticket_id_idx on cs_ticket_messages(ticket_id);
-create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages(instance_id);
-create index cs_ticket_messages_trashed_p_idx on cs_ticket_messages(trashed_p);
-create index cs_ticket_messages_post_id_idx on cs_ticket_messages(post_id);
+create index cs_ticket_messages_ticket_id_idx on cs_ticket_messages (ticket_id);
+create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages (instance_id);
+create index cs_ticket_messages_trashed_p_idx on cs_ticket_messages (trashed_p);
+create index cs_ticket_messages_post_id_idx on cs_ticket_messages (post_id);
 
 CREATE TABLE cs_customer_stats (
-    instance_id      integer not null,
+    instance_id      integer,
     customer_id      integer,
     ticket_id        integer,
     -- The cs message_id might not be the prior id in a sequence.
@@ -223,8 +225,7 @@ CREATE TABLE cs_customer_stats (
     -- Hint:
     -- set hm_list \clock format \clock seconds\ -format "%H %M"\ 
     -- set time_m \expr \lindex hm 0\ * 6 + \lindex hm 1\ / 10 \
-    time_m              integer,
-
+    time_m              integer
 );
 
 create index cs_customer_stats_ticket_id_idx on cs_customer_stats(ticket_id);
@@ -234,7 +235,7 @@ create index cs_customer_stats_customer_id_idx on cs_customer_stats(customer_id)
  --aka canned_response table
 CREATE TABLE cs_message_templates (
     template_id      integer not null primary key,
-    instance_id      integer not null,
+    instance_id      integer,
     -- automatically inactivate old, and issue new tempalate_id
     active_p         varchar(1),
     label            varchar(30),
@@ -253,11 +254,10 @@ create index cs_message_templates_instance_id_idx on cs_message_templates(instan
 create index cs_message_templates_label_idx on cs_message_templates(label);
 
 CREATE TABLE cs_categories (
-    instance_id      integer not null,
+    instance_id      integer,
     id               integer not null,
     -- if this a sub category of another category, parent category_id
     parent_id        integer,
-    instance_id      integer,
     -- to sort categories
     order_value      integer,
     label            varchar(40),
@@ -269,7 +269,7 @@ CREATE TABLE cs_categories (
 create index cs_categories_instance_id_idx on cs_categories(instance_id);
 create index cs_categories_id_idx on cs_categories(id);
 create index cs_categories_label_idx on cs_categories(label);
-create index cs_categories_grouping_idx on cs_categories(grouping);
+create index cs_categories_parent_id_idx on cs_categories(parent_id);
 
 -- ticket_id subscribers (users) map
 CREATE TABLE cs_ticket_users_map (
@@ -285,7 +285,7 @@ create index cs_ticket_users_map_user_id_idx on cs_ticket_users_map(user_id);
 
 
 -- ticket_id cs_rep (admins) map
-CREATE TABLE cs_ticket_reps_map (
+CREATE TABLE cs_ticket_rep_map (
        instance_id         integer not null,
        ticket_id     integer,
        -- one record for each cs rep / admin that is currently assigned to ticket
