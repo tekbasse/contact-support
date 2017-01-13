@@ -29,16 +29,20 @@ ad_proc -private cs_customer_ids_for_user {
         set user_id [ad_conn user_id]
     }
     # Change this following line to whatever other package reference provides a list of customer_ids for user_id
-    # Use accounts-ledger api for default
+    # Use accounts-ledger api for default, consider a package parameter for other cases
     ## code
     set customer_id_list [list $user_id]
     return $customer_id_list
 }
 
-
+## After multiple reps have been alerted, 
+# There needs to be some way to assign 1+ to a ticket so that
+# work is not duplicated or uncoordinated.
+# This can be done by changing CS rep assignments in ticket. 
+# Person accepts assignment ie says actively working on it by posting (and removing other CS reps from list).
 
 # tickets can be created, updated (opened, closed), trashed, listed, read
-# messages can be created, read, trashed, not updated (edited)
+# messages can be created, read, trashed, not updated (edited), viewed by customer or CS reps or both
 # notifications sent to cs reps and/or customers
 # users can unsubscribe
 # customer reps can edit subscription list by changing cs subscribers to a new group or tier
