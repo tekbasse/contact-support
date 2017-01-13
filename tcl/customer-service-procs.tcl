@@ -29,7 +29,27 @@ ad_proc -private cs_customer_ids_for_user {
         set user_id [ad_conn user_id]
     }
     # Change this following line to whatever other package reference provides a list of customer_ids for user_id
+    # Use accounts-ledger api for default
+    ## code
     set customer_id_list [list $user_id]
     return $customer_id_list
 }
+
+
+
+# tickets can be created, updated (opened, closed), trashed, listed, read
+# messages can be created, read, trashed, not updated (edited)
+# notifications sent to cs reps and/or customers
+# users can unsubscribe
+# customer reps can edit subscription list by changing cs subscribers to a new group or tier
+# a proc to create a message and ticket url 
+# ticket shows a ticket, 
+# tickets shows tickets subscribed to or open or closed
+# subscriptions shows open ticket subscriptions
+# admin/tiers show/edit tier levels.  Default tier also performs triage.
+# admin/categories-tiers show/edit roles assigned to each category/tier
+#    presented in table format using checkboxes, tiers vs. categories?
+#    No. each tier&category gets associated with one or more roles. Present as 
+#    a list of role choices for each permuation of tier/category
+# admin/categories show/edit categories
 
