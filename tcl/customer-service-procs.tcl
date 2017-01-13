@@ -39,7 +39,10 @@ ad_proc -private cs_customer_ids_for_user {
 # There needs to be some way to assign 1+ to a ticket so that
 # work is not duplicated or uncoordinated.
 # This can be done by changing CS rep assignments in ticket. 
-# Person accepts assignment ie says actively working on it by posting (and removing other CS reps from list).
+# If a CS rep assigns another role, then current subcribers are unsubscribed, and new roles subscribed and notified.
+# Person accepts assignment ie says actively working on it by posting (and optinally removing other CS reps from subscription list based on package parameter VolunteerUnsubscribesOthersP).
+# This should be push button easy.
+# if an unassigned person goes to page, they can add themselves by button, but not unsubscribe others.
 
 # tickets can be created, updated (opened, closed), trashed, listed, read
 # messages can be created, read, trashed, not updated (edited), viewed by customer or CS reps or both
