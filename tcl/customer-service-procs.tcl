@@ -14,7 +14,7 @@ ad_library {
 # following are to be custom defined
 # cs_customer_ids_for_user
 
-ad_proc -private cs_customer_ids_for_user { 
+ad_proc -private cs_customer_ids_of_user_id { 
     {user_id ""}
     {instance_id ""}
     {closed_p "0"}
@@ -25,13 +25,32 @@ ad_proc -private cs_customer_ids_for_user {
         # set instance_id package_id
         set instance_id [qc_set_instance_id]
     }
+    set package_id [ad_conn package_id]
+    set cs_type [parameter::get -parameter $parameter_name -package_id $package_id]
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+    #set cs_type qc_parameter_get $instance_id ""
+                 
     # Change this following line to whatever other package reference provides a list of customer_ids for user_id
     # Use accounts-ledger api for default, consider a package parameter for other cases
+    # qal_contact_ids_of_usr_id  (this handles for vendors, customers, as well as other cases)
     ## code
-    set customer_id_list [list $user_id]
+    switch $cs_type -- {
+        1 {
+            set customer_id_list [qal_customer_ids_of_user_id $user_id ]
+        }
+        2 {
+            set customer_id_list [qal_vendor_ids_of_user_id $user_id ]
+        }
+        3 {
+            ## maybe combine in another proc to reduce query load?
+            set customer_id1_list [qal_customer_ids_of_user_id $user_id ]
+            set customer_id2_list [qal_vendor_ids_of_user_id $user_id ]
+            set customer_id_list [set_union $customer_id1_list $customer_id2_list]
+        }
+    }
+    
     return $customer_id_list
 }
 
