@@ -16,23 +16,22 @@ ad_library {
 
 ad_proc -private cs_customer_ids_of_user_id { 
     {user_id ""}
-    {instance_id ""}
-    {closed_p "0"}
 } {
-    Returns list of customer_id available to user_id. If closed_p is 1, returns closed tickets also.
+    Returns list of customer_id available to user_id in a customer's role position.
 } {
-    if { $instance_id eq "" } {
+    upvar 1 instance_id instance_id
+    if { ![info exists instance_id] } {
         # set instance_id package_id
         set instance_id [qc_set_instance_id]
     }
-    set package_id [ad_conn package_id]
-    set cs_type [parameter::get -parameter $parameter_name -package_id $package_id]
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+    set package_id [ad_conn package_id]
     #set cs_type qc_parameter_get $instance_id ""
-                 
-    # Change this following line to whatever other package reference provides a list of customer_ids for user_id
+    set cs_type [parameter::get -parameter $parameter_name -package_id $package_id]
+
+    # Change this SWITCH to whatever other package reference provides a list of customer_ids for user_id
     # Use accounts-ledger api for default, consider a package parameter for other cases
     # qal_contact_ids_of_usr_id  (this handles for vendors, customers, as well as other cases)
     ## code
