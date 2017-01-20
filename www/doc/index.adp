@@ -37,29 +37,35 @@ tickets automatically alert to those assigned by tag/category or q-control packa
 </li><li>
 replies to email notifications are posted to ticket.
 </li><li>
-Ticket state (open/closed) is somewhat independent between support team and customers.
+    Ticket state can be set identical (open/closed), or
+    is somewhat independent between support team and customers
+    to allow for tickets that require customers to complete
+    tasks without additional coordination with cs reps.
 <pre>
-terminology:   SST = support ticket state (open/closed)
-               CST = customer ticket state (open/closed)
-When customer opens ticket, both CST and SST are opened for triage.
-When customer closes ticket, both CST and SST are closed.
-When support closes ticket, both CST and SST are closed
-When customer re-opens ticket or replies to ticket, ticket is triaged again by first tier.
-When support triages ticket, and more info needed by customer,
-     ticket is SST is closed, CST remains open.
-When support triages new ticket, 
-     qualified ticket remains open for both CST & SST.
-     support categories and assigns ticket to a tier level and priority if different than default.
-When support triages a previously closed ticket,
-     qualified ticket remains open for both CST & SST, and notifications sent to previously assigned reps.
-     otherwise SST is closed (with message sent to customer stating no support response needed).
-     Customer asked to close CST ticket when they are finished with the topic internally.
+  independent ticket state terminology:
+  SST = support ticket state (open/closed)
+  CST = customer ticket state (open/closed)
+  When customer opens ticket, both CST and SST are opened for triage.
+  When customer closes ticket, both CST and SST are closed.
+  When support closes ticket, both CST and SST are closed
+  When customer re-opens ticket or replies to ticket, ticket is triaged again by first tier.
+  When support triages ticket, and more info needed by customer,
+      ticket is SST is closed, CST remains open.
+  When support triages new ticket, 
+      qualified ticket remains open for both CST & SST.
+      support categories and assigns ticket to a tier level and priority if different than default.
+  When support triages a previously closed ticket,
+      qualified ticket remains open for both CST & SST, and
+      notifications sent to previously assigned reps.
+      Otherwise SST is closed (with message sent to customer stating no support response needed).
+  Customer asked to close CST ticket when they are finished with the topic internally.
+</pre>
 </li><li>
 URL to ticket or ticket/message
 </li><li>
 ticket thread has reference by ticket#/message# or ticket_nbr-message_nbr.
 </li><li>
-ticket number is unqiue alphanumeric reference to hide system ticket number, based on open timestamp.
+ticket number is unqiue alphanumeric reference to hide system ticket and message number, based on open timestamp.
 </li><li>
 create a feedback package to integrate reviews of service..
 </li><li>
