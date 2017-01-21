@@ -78,3 +78,7 @@ ad_proc -private cs_customer_ids_of_user_id {
 #    a list of role choices for each permuation of tier/category
 # admin/categories show/edit categories
 
+# for scheduled activities, calculate time offsets using a parameter SchedRemindersList with
+# values separated by comma, for example, 3 days, 1 day, 1 hour, 10 minutes. Before is assumed.
+#  and hf_clock_scan_interval  
+
