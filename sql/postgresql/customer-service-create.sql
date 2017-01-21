@@ -319,14 +319,40 @@ create index cs_cat_assignment_map_instance_id_idx on cs_cat_assignment_map(inst
 create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);
 create index cs_cat_assignment_map_user_id_idx on cs_cat_assignment_map(user_id);
 
+-- These get posted to cs_ticket_messages at time of trigger_ts
 CREATE TABLE cs_sched_messages (
        instance_id    integer,
        ticket_id      integer not null,
        -- time to trigger/post message
        trigger_ts     timestamptz,
        triggered_p    varchar(1),
-       message_html   text,
-       message_txt    text
+       message        text,
+       -- See cs_tickets  for more details.
+       privacy_level  varchar(1),
+       -- html, text, etc
+       message_type   varchar(4) default 'text'
 );
 
-create index cs_sched_messages_
+create index cs_sched_messages_instance_id_idx on cs_sched_messages (instance_id);
+create index cs_sched_messages_ticket_id_idx on cs_sched_messages (ticket_id);
+create index cs_sched_messages_trigger_ts_idx on cs_sched_messages (trigger_ts);
+create index cs_sched_messages_triggered_p_idx on cs_sched_messages (triggered_p);
+
+CREATE TABLE cs_ticket_op_periods (
+       instance_id    integer,
+       ticket_id      integer not null,
+       -- estimated, as in appointment time
+       start_ts     timestamptz,
+       end_ts       timestamptz,
+       -- answers question:
+       -- Is operation complete for this period?
+       -- This closes if time is after end_time
+       -- or ticket_id is closed.
+       op_done_p      varchar(1)
+);
+
+create index cs_ticket_op_periods_instance_id_idx on cs_ticket_op_periods (instance_id);
+create index cs_ticket_op_periods_ticket_id_idx on cs_ticket_op_periods (ticket_id);
+create index cs_ticket_op_periods_op_done_p_idx on cs_ticket_op_periods (op_done_p);
+
+

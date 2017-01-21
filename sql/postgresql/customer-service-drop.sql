@@ -1,6 +1,22 @@
 -- customer-service-drop.sql
 --
 -- @license GNU GENERAL PUBLIC LICENSE, Version 2
+
+drop index cs_ticket_op_periods_op_done_p_idx;
+drop index cs_ticket_op_periods_ticket_id_idx;
+drop index cs_ticket_op_periods_instance_id_idx;
+
+DROP TABLE cs_ticket_op_periods;
+
+drop index cs_sched_messages_triggered_p_idx;
+drop index cs_sched_messages_trigger_ts_idx;
+drop index cs_sched_messages_ticket_id_idx;
+drop index cs_sched_messages_instance_id_idx;
+
+DROP TABLE cs_sched_messages;
+
+
+
 drop index cs_cat_assignment_map_user_id_idx;
 drop index cs_cat_assignment_map_category_id_idx;
 drop index cs_cat_assignment_map_instance_id_idx;
