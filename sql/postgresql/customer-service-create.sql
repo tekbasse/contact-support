@@ -111,6 +111,16 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     -- Some ticket trackers lock a ticket to prevent reopening.
     -- Customers should be allowed to post more info for their own contextual notes.
     ignore_reopen_p     varchar(1),
+    -- Does this ticket represent a service outage or other situation
+    -- needing immiediate ie unscheduled intervention?
+    -- service_outage_p    varchar(1),
+    unscheduled_service_req_p varchar(1), 
+    -- scheduled operation
+    -- Does this ticket have an operation scheduled?
+    scheduled_operation_p varchar(1),
+    -- Is this operation part of required maintenance?
+    -- If so, and scheduled_operation_p is false, ask to schedule..
+    scheduled_maint_req_p varchar(1),
     priority            integer
 );
 
@@ -273,7 +283,7 @@ create index cs_categories_parent_id_idx on cs_categories(parent_id);
 
 -- ticket_id subscribers (users) map
 CREATE TABLE cs_ticket_users_map (
-       instance_id         integer not null,
+       instance_id   integer,
        ticket_id     integer,
        -- one record for each user that currently subscribes to ticket
        user_id       integer
@@ -286,7 +296,7 @@ create index cs_ticket_users_map_user_id_idx on cs_ticket_users_map(user_id);
 
 -- ticket_id cs_rep (admins) map
 CREATE TABLE cs_ticket_rep_map (
-       instance_id         integer not null,
+       instance_id   integer,
        ticket_id     integer,
        -- one record for each cs rep / admin that is currently assigned to ticket
        user_id       integer
@@ -298,7 +308,7 @@ create index cs_ticket_rep_map_instance_id_idx on cs_ticket_rep_map(instance_id)
 
 -- Answers question, who is automatically assigned by ticket of posted category
 CREATE TABLE cs_cat_assignment_map (
-       instance_id         integer not null,
+       instance_id   integer,
        category_id   integer,
        -- one record for each category
        user_id       integer,
@@ -309,3 +319,14 @@ create index cs_cat_assignment_map_instance_id_idx on cs_cat_assignment_map(inst
 create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);
 create index cs_cat_assignment_map_user_id_idx on cs_cat_assignment_map(user_id);
 
+CREATE TABLE cs_sched_messages (
+       instance_id    integer,
+       ticket_id      integer not null,
+       -- time to trigger/post message
+       trigger_ts     timestamptz,
+       triggered_p    varchar(1),
+       message_html   text,
+       message_txt    text
+);
+
+create index cs_sched_messages_
