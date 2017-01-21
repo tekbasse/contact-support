@@ -82,3 +82,14 @@ ad_proc -private cs_customer_ids_of_user_id {
 # values separated by comma, for example, 3 days, 1 day, 1 hour, 10 minutes. Before is assumed.
 #  and hf_clock_scan_interval  
 
+#if ticket is not service_outage_p/unscheduled_service_req_p,
+#   ask customer when is preferred time for any interruptions to occurr
+#  And when is it most important that interruptions are minimized.
+
+# if ticket is scheduled_operation_p ,
+# alert customers 1 day ahead, 1 hour ahdead, 12 mins ahead to time of service
+# (see package parameter SchedRemindersList )
+# by using cs_sched_messages that post to ticket automatically per a sched_proc,
+# 
+# And show status of current, appropriate cs_ticket_op_periods on each cs page.
+
