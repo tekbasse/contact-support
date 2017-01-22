@@ -1,0 +1,14 @@
+#customer-service/www/tickets
+
+
+# if user has open tickets
+# show open tickets
+
+# otherwise show new ticket form
+
+
+#links to show open|closed tickets
+# order by date or topic, search content for keyword/topic
+
+
+
