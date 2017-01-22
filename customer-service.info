@@ -22,6 +22,7 @@
 
         <provides url="customer-service" version="0.010"/>
         <requires url="q-control" version="0.001"/>
+        <requires url="q-forms" version="0.001"/>
 
         <callbacks>
         </callbacks>
