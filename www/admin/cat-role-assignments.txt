@@ -1,0 +1,4 @@
+This is the page where:
+
+categories are edited, and roles are assigned to categories.
+

@@ -1,0 +1,2 @@
+this is the page for displaying a single ticket
+and adding a message to it, or changing subscription(s)
