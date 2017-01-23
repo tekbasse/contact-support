@@ -14,8 +14,8 @@ SELECT nextval ('cs_id_seq');
 
 CREATE TABLE cs_ticket_ref_id_map (
     instance_id         integer,
-    t_ref varchar(200) not null,
-    id  integer not null
+    id  integer unique not null,
+    t_ref varchar(200) unique not null
 ); 
 
 create index cs_ticket_ref_id_map_ref_idx on cs_ticket_ref_id_map (t_ref);

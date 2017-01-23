@@ -50,6 +50,52 @@ ad_proc -private cs_customer_ids_of_user_id {
     return $customer_id_list
 }
 
+# cs_nextval
+ad_proc -private cs_id_seq_nextval {
+    {t_ref_name ""}
+} {
+    Returns nextval of cs_id_seq, after generating a cooresponding randomized reference.
+    If t_ref_name is provided, value of t_ref is set to variable name passed to t_ref_name.
+} {
+    upvar 1 instance_id instance_id
+    if { $t_ref_name ne "" } {
+        if { [hf_are_safe_and_visible_characters_q $t_ref_name] } {
+            upvar 1 $t_ref_name t_ref
+        }
+    }
+    set id [db_nextval cs_id_seq]
+    # same number of characters as in a uuid, but not limited to hexidecimal digits.
+
+    set exists_p 0
+    set count 0
+    set t_len 32
+    while { $exists_p ne 1 && $count < 100 } {
+        incr count
+        set t_ref [ad_generate_random_string $t_len]
+        set exists_p [db_0or1row cs_id_seq_nextval_ck {select t_ref from cs_ticket_ref_id_map
+            where t_ref=:t_ref } ]
+        if { $exists_p } {
+            if { $count < 5 } {
+                ns_log Notice "cs_id_seq_nextval.79: generated a nonunique ref: '${t_ref}'. This should be rare."
+            } elseif { $count < 90 } {
+                ns_log Warning "cs_id_seq_nextval.81: is generating too many ref. collisions. Change to another randomization proc."
+            } else {
+                # This should not happen.
+                ns_log Warning "cs_id_seq_nextval.84: Error. This is generating too many ref. collisions. Increasing length."
+                incr t_len
+            }
+        } else {
+            db_dml cs_id_seq_nextval_w {
+                insert into cs_ticket_ref_id_map 
+                (instance_id,id,t_ref) values (:instance_id,:id,:t_ref)
+            }
+        }
+    }
+    return $id
+}
+    
+                  
+
 # cs_cat_role_map_create
 # cs_cat_role_map_del
 
