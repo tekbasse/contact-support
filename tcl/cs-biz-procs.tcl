@@ -18,3 +18,14 @@ ad_library {
 
 # cs_cats_of_role_read
 # cs_roles_of_cat_read
+
+# if !$tickets.unscheduled_service_req_p
+#  ask customer when is preferred service time
+#  in case of service interruptions are needed.
+#  and ask when is most important that interruptions are minimized.
+
+# if $tickets.scheduled_maint_req_p,
+# When $scheduled_operation_p ie scheduled, set notifications of
+# alert customers according to parameter SchedRemindersList
+#
+
