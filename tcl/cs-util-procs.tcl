@@ -64,11 +64,18 @@ ad_proc -private cs_id_seq_nextval {
         }
     }
     set id [db_nextval cs_id_seq]
-    # same number of characters as in a uuid, but not limited to hexidecimal digits.
+    #  number of characters as in a uuid = 32
+    # number of possibilities per character = 16 (hexadecimal)
+    # total permutations = 3.4028236692093846e+38
+    
+    # ad_generate_random_string returns 
+    # 26 + 10 = 36 possibilities per character 
+    # If number of characters = 25
+    # total permutations = 8.08281277464764e+38
 
     set exists_p 0
     set count 0
-    set t_len 32
+    set t_len 25
     while { $exists_p ne 1 && $count < 100 } {
         incr count
         set t_ref [ad_generate_random_string $t_len]
