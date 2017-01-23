@@ -18,10 +18,9 @@ set delete_p [qc_permission_p  $user_id $customer_id non_assets delete $instance
 
 set user_message_list [list ]
 
-set input_arr(page_title) $title
-
 set form_posted [qf_get_inputs_as_array input_arr hash_check 1]
-qf_array_to_vars input_arr [list customer_id ticket_id posted_by message page_title mode next_mode submit privacy_level internal_notes assigned_to closed_p ]
+
+qf_array_to_vars input_arr [list customer_id ticket_id mode next_mode submit]
 
 ns_log Notice "tickets.tcl(63): mode $mode next_mode $next_mode"
 # Modes are views, or one of these compound action/views
