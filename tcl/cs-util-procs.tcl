@@ -52,3 +52,11 @@ ad_proc -private cs_customer_ids_of_user_id {
 
 # cs_cat_role_map_create
 # cs_cat_role_map_del
+
+# cs_notify_customer_reps $ticket
+
+# URL to ticket or ticket/message (handled by www/index.vuh)
+# cs_ticket_to_url ticket_nbr (message_nbr), if message_nbr supplied, just ref message #
+#  if ticket and message# supplied, url should be for whole ticket with #message via ID tag.
+# ticket number is unqiue alphanumeric reference to hide system ticket and message number, based on open timestamp.
+

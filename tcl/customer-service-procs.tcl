@@ -27,9 +27,13 @@ ad_library {
 # users can unsubscribe
 # customer reps can edit subscription list by changing cs subscribers to a new group or tier
 # a proc to create a message and ticket url 
+
 # ticket shows a ticket, 
+
 # tickets shows tickets subscribed to or open or closed
+
 # subscriptions shows open ticket subscriptions
+
 # admin/tiers show/edit tier levels.  Default tier also performs triage.
 # admin/categories-tiers show/edit roles assigned to each category/tier
 #    presented in table format using checkboxes, tiers vs. categories?
@@ -50,5 +54,22 @@ ad_library {
 # (see package parameter SchedRemindersList )
 # by using cs_sched_messages that post to ticket automatically per a sched_proc,
 # 
-# And show status of current, appropriate cs_ticket_op_periods on each cs page.
+
+# includes /lib/page-fragments:
+# status of current, appropriate cs_ticket_op_periods on each cs page.
+#
+# Show stats (avg/min/max) response time over day/week/year of customer as well as support to antcipate response timing.
+#
+# Show stats (avg/min/max) time to final ticket closing to help anticipate total down/recovery time.
+#
+# Show graph of UTC time-in-day and time-in-week when responses are made of customer as well as support to anticipate response timing.
+#
+# Post an announcement on customer-service pages without notification when other users may be affected. 
+# --to minimize tickets associated with a system wide issue. 
+# (click a button to be notified when issue is resolved).
+# This kind of announcement is not registered in a customer's ticket logs.
+# Active announcements of this type appear on admin pages, and 
+# is associated with a ticket, so that it can be automatically expired when ticket closes,
+# or manually expired by a cs rep.
+
 

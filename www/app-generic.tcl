@@ -23,11 +23,6 @@ set form_posted [qf_get_inputs_as_array input_arr hash_check 1]
 qf_array_to_vars input_arr [list customer_id ticket_id mode next_mode submit]
 
 ns_log Notice "tickets.tcl(63): mode $mode next_mode $next_mode"
-
-# Notes from requirements:
-# tickets shows tickets subscribed to or open or closed
-
-
 # Modes are views, or one of these compound action/views
 
 # Actions
