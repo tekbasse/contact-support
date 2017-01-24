@@ -113,3 +113,5 @@ ad_proc -private cs_id_seq_nextval {
 #  if ticket and message# supplied, url should be for whole ticket with #message via ID tag.
 # ticket number is unqiue alphanumeric reference to hide system ticket and message number, based on open timestamp.
 
+# cs_ticket_action_log_cr
+

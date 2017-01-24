@@ -12,3 +12,11 @@ ad_library {
 }
 
 # cs_cat_role_map_read
+
+# cs_tickets
+
+# cs_stats_til_ticket_response (only for nonscheduled events)
+
+# cs_stats_til_ticket_close (only for nonscheduled_events)
+
+# cs_anticipated_customer_response_time

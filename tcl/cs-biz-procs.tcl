@@ -11,9 +11,21 @@ ad_library {
     
 }
 
+# cs_ticket_create (init new ticket, open, cs_ticket_message_create)
+# cs_announce (cs rep created for multple customers) 
+    # Send announcement / notifiy to subset of customers by customer_ref (new ticket_id)  
+
+# cs_ticket_open (maybe it was closed)
+# cs_ticket_close_by_customer
+# cs_ticket_close_by_rep
+
 # cs_ticket_subscribe
 # cs_ticket_unsubscribe
+# cs_ticket_subscriptions_change
 
+
+
+# cs_ticket_message_create
 
 
 # cs_cats_of_role_read
