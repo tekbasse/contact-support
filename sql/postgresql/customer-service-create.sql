@@ -312,8 +312,9 @@ CREATE TABLE cs_cat_assignment_map (
        category_id   integer,
        -- one record for each category
        user_id       integer,
-       -- and / or references to q-control roles for example.
-       group_refs    text
+       -- and / or references to a q-control roles for example.
+       -- Multiple groups imply multiple rows. 
+       group_ref    text
 );
 create index cs_cat_assignment_map_instance_id_idx on cs_cat_assignment_map(instance_id);
 create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);
