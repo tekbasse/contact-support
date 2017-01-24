@@ -12,8 +12,9 @@ ad_library {
 }
 
 # cs_ticket_create (init new ticket, open, cs_ticket_message_create)
-# cs_announce (cs rep created for multple customers) 
-    # Send announcement / notifiy to subset of customers by customer_ref (new ticket_id)  
+# cs_announce (cs rep to multple customers) 
+    # Send announcement / notifiy to subset of customers by customer_ref, ticket_id is the one
+    # that is related to announcement. When ticket_id closes, announcement closes.
 
 # cs_ticket_open (maybe it was closed)
 # cs_ticket_close_by_customer
