@@ -273,6 +273,9 @@ CREATE TABLE cs_categories (
     label            varchar(40),
     name             varchar(80),
     active_p         varchar(1) default '1',
+    -- qc_permission_p qc_property.property_label 
+    -- Assume property_label is 'non_asset' unless specified.
+    property_label   varchar(24) default 'non_assets',
     description      text
 );
 
