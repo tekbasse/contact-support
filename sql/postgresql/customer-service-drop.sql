@@ -24,17 +24,17 @@ drop index cs_cat_assignment_map_instance_id_idx;
 DROP TABLE cs_cat_assignment_map;
 
 
-drop index cs_ticket_rep_map_instance_id_idx;
-drop index cs_ticket_rep_map_user_id_idx;
-drop index cs_ticket_rep_map_ticket_id_idx;
+drop index cs_support_rep_ticket_map_instance_id_idx;
+drop index cs_support_rep_ticket_map_user_id_idx;
+drop index cs_support_rep_ticket_map_ticket_id_idx;
 
-DROP TABLE cs_ticket_rep_map;
+DROP TABLE cs_support_rep_ticket_map;
 
-drop index cs_ticket_users_map_user_id_idx;
-drop index cs_ticket_users_map_ticket_id_idx;
-drop index cs_ticket_users_map_instance_id_idx;
+drop index cs_customer_rep_ticket_map_user_id_idx;
+drop index cs_customer_rep_ticket_map_ticket_id_idx;
+drop index cs_customer_rep_ticket_map_instance_id_idx;
 
-DROP TABLE cs_ticket_users_map;
+DROP TABLE cs_customer_rep_ticket_map;
 
 drop index cs_categories_parent_id_idx;
 drop index cs_categories_label_idx;

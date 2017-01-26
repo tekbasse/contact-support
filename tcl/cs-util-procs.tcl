@@ -11,6 +11,8 @@ ad_library {
     
 }
 
+# qc_properties  returns list of properties
+
 ad_proc -private cs_customer_ids_of_user_id { 
     {user_id ""}
 } {

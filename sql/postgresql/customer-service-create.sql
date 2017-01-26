@@ -275,6 +275,10 @@ CREATE TABLE cs_categories (
     active_p         varchar(1) default '1',
     -- qc_permission_p qc_property.property_label 
     -- Assume property_label is 'non_asset' unless specified.
+    -- This way, categories for customer can be filtered to just those with related role permission
+    -- Automatic customer subscriptions are based on those who have write/admin permission for property_label
+    -- And cs_reps might be initially assigned based on role permission? No
+    -- cs_reps assigned based on category. 
     property_label   varchar(24) default 'non_assets',
     description      text
 );
@@ -285,29 +289,29 @@ create index cs_categories_label_idx on cs_categories(label);
 create index cs_categories_parent_id_idx on cs_categories(parent_id);
 
 -- ticket_id subscribers (users) map
-CREATE TABLE cs_ticket_users_map (
+CREATE TABLE cs_customer_rep_ticket_map (
        instance_id   integer,
        ticket_id     integer,
-       -- one record for each user that currently subscribes to ticket
+       -- one record for each customer / user_id that currently subscribes to ticket
        user_id       integer
 );
 
-create index cs_ticket_users_map_instance_id_idx on cs_ticket_users_map(instance_id);
-create index cs_ticket_users_map_ticket_id_idx on cs_ticket_users_map(ticket_id);
-create index cs_ticket_users_map_user_id_idx on cs_ticket_users_map(user_id);
+create index cs_customer_rep_ticket_map_instance_id_idx on cs_customer_rep_ticket_map(instance_id);
+create index cs_customer_rep_ticket_map_ticket_id_idx on cs_customer_rep_ticket_map(ticket_id);
+create index cs_customer_rep_ticket_map_user_id_idx on cs_customer_rep_ticket_map(user_id);
 
 
 -- ticket_id cs_rep (admins) map
-CREATE TABLE cs_ticket_rep_map (
+CREATE TABLE cs_support_rep_ticket_map (
        instance_id   integer,
        ticket_id     integer,
-       -- one record for each cs rep / admin that is currently assigned to ticket
+       -- one record for each cs rep / admin user_id that is currently assigned to ticket
        user_id       integer
 );
 
-create index cs_ticket_rep_map_ticket_id_idx on cs_ticket_rep_map(ticket_id);
-create index cs_ticket_rep_map_user_id_idx on cs_ticket_rep_map(user_id);
-create index cs_ticket_rep_map_instance_id_idx on cs_ticket_rep_map(instance_id);
+create index cs_support_rep_ticket_map_ticket_id_idx on cs_support_rep_ticket_map(ticket_id);
+create index cs_support_rep_ticket_map_user_id_idx on cs_support_rep_ticket_map(user_id);
+create index cs_support_rep_ticket_map_instance_id_idx on cs_support_rep_ticket_map(instance_id);
 
 -- Answers question, who is automatically assigned by ticket of posted category
 CREATE TABLE cs_cat_assignment_map (
