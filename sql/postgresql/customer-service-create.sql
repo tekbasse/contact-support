@@ -1,4 +1,4 @@
--- customer-service-create.sql
+1;4205;0c-- customer-service-create.sql
 --
 -- @license GNU GENERAL PUBLIC LICENSE, Version 2
 
@@ -286,8 +286,11 @@ CREATE TABLE cs_categories (
     -- This way, categories for customer can be filtered to just those with related role permission
     -- Automatic customer subscriptions are based on those who have write/admin permission for property_label
     -- And cs_reps might be initially assigned based on role permission? No
-    -- cs_reps assigned based on category. 
-    property_label   varchar(24) default 'non_assets',
+    -- cs_reps assigned based on category and their concact_id's property label. 
+    cs_property_label   varchar(24) default 'non_assets',
+    -- and
+    -- customer reps based on customer_id property_label
+    cc_property_label   varchar(24) default 'non_assets',
     description      text
 );
 
