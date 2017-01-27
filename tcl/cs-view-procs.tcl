@@ -11,49 +11,26 @@ ad_library {
     
 }
 
-ad_proc -private cs_support_reps_of_cat {
+
+ad_proc -private cs_reps_of_cat {
     contact_id args
 } {
-    Returns user_ids associated with a category as a tcl_list
+    Returns user_ids of contact_id that are associate with category as a list.
+    <br/>
+    For customer reps, contact_id is customer's contact_id.
+    <br/>
+    For support reps, contact_id is customer-support's contact_id.
     <br/>
     <code>args</code> can be passed as name value list or left empty for all cases.
     <br>
     Accepted names are: <code>category_id</code>, <code>parent_id</code>, and <code>label</code>.
     <br>
 } {
-    # read cs_categories.property_label as property_id
-    set property_id_exists_p [qc_property_id_exists_p $property_id $instance_id]
-    if { $property_id_exists_p } {
-                # property_id_exists_p should be true. It is looked up in a table.
-                
-        set role_ids_list [qc_roles_of_prop_priv $property_id $privilege]
+    # read cs_categories.property_label
+    # convert to property_id
+    set property_id [qc_property_id $property_label $instance_id]
 
-    } 
-
-    if { [llength $role_ids_list] > 0 } {
-        
-            # get user_ids limited by hf_role_id in one query
-        set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
-    }
-    # add user_ids from cs_cat_assignment_map
-}
-
-ad_proc -private cs_customer_reps_of_cat {
-    customer_id args
-} {
-    Returns user_ids of customer that are associate with category as a list.
-    <br/>
-    <code>args</code> can be passed as name value list or left empty for all cases.
-    <br>
-    Accepted names are: <code>category_id</code>, <code>parent_id</code>, and <code>label</code>.
-    <br>
-} {
-    # read cs_categories.property_label as property_id
-    
-    set property_id_exists_p [qc_property_id_exists_p $property_id $instance_id]
-    if { $property_id_exists_p } {
-                # property_id_exists_p should be true. It is looked up in a table.
-                
+    if { $property_id ne "" } {
         set role_ids_list [qc_roles_of_prop_priv $property_id $privilege]
 
     } 
