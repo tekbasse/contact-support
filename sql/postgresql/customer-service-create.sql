@@ -322,14 +322,17 @@ create index cs_support_rep_ticket_map_user_id_idx on cs_support_rep_ticket_map(
 create index cs_support_rep_ticket_map_instance_id_idx on cs_support_rep_ticket_map(instance_id);
 
 -- Answers question, who is automatically assigned by ticket of posted category
+-- These are auxiliary assignments separate one from ones derived by cs_categories.property_label
 CREATE TABLE cs_cat_assignment_map (
        instance_id   integer,
        category_id   integer,
        -- one record for each category
-       user_id       integer,
+       user_id       integer
        -- and / or references to a q-control roles for example.
        -- Multiple groups imply multiple rows. 
-       group_ref    text
+       -- No. This is too much complexity for use cases.
+       -- This is handled via cs_categories.property_label and cs_cat_assignment_map.user_id
+       -- group_ref    text
 );
 create index cs_cat_assignment_map_instance_id_idx on cs_cat_assignment_map(instance_id);
 create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);

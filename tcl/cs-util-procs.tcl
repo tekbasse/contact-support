@@ -117,10 +117,42 @@ ad_proc -private cs_id_seq_nextval {
     return $id
 }
     
-                  
+ad_proc -private cs_customer_id_of_ref {
+    c_ref
+    create_p "1"
+} {
+    Returns customer_id (unique CS integer ref) of a possibly external customer_ref (noninteger).
+    Default create_p is to create a customer_id if one does not exist.
+} {
+    upvar 1 instance_id instance_id
+    set id ""
+    db_0or1row cs_customer_ref_id_map_r { select id from cs_customer_ref_id_map 
+        where c_ref=:cref 
+        and instance_id=:instance_id }
+    return $id
+}
 
-# cs_cat_role_map_create
-# cs_cat_role_map_del
+
+ad_proc -private cs_category_create {
+
+} {
+    Create a category entry.
+
+    @return 1 if created. Otherwise returns 0.
+} {
+    upvar 1 instance_id instance_id
+    set success_p 1
+
+}
+
+ad_proc -private cs_category_trash {
+
+} {
+    Trashes a category entry.
+
+    @return 1 if trashed. Otherwise returns 0
+}
+
 
 # cs_notify_customer_reps $ticket
 
