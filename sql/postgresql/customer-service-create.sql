@@ -83,6 +83,7 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     customer_id         integer not null,
  -- authenticated_by is handy for indirect posts (such as via call center operator)
     authenticated_by    varchar(40),
+    -- current category_id
     ticket_category_id  varchar(100),
     current_tier_level  integer,
     subject             varchar(100),
@@ -152,9 +153,12 @@ create index cs_ticket_stats_instance_id_idx on cs_ticket_stats (instance_id);
 CREATE TABLE cs_ticket_action_log (
     ticket_id          integer not null,
     instance_id        integer,
+    -- main log message.
     -- for delegating/screening/escalating
-    -- app note. When these change, log to internal_notes in a new cs_ticket_message
+    -- ie any ticket related action, log here and 
+    -- cs_ticket_messages.internal_notes
 
+    log_message        text,
     -- cs_rep_ids and customer_user_ids should 
     -- note actual subscriptions, not the changed ones.
     cs_rep_ids         text,
@@ -197,11 +201,15 @@ CREATE TABLE cs_ticket_messages (
     -- A space delimited list of initial cs representative user_ids.
     -- Unsubscribing adds a message to that effect.
     -- Use cs_ticket_rep_map for current ones.
-    assigned_to      text,
+    -- This has been moved to cs_ticket_action_log
+    -- assigned_to      text,
+
     -- A space delimited list of initial customer user_ids. 
     -- Unsubscribing adds a message to that effect.
     -- Use cs_ticket_users_map for current ones.
-    subscribed       text,
+    -- This has been moved to cs_ticket_action_log
+    -- subscribed       text,
+
     -- Is this a log / note for internal view/use only?
     internal_p       varchar(1),
     trashed_p        varchar(1)
