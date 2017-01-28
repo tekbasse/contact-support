@@ -13,13 +13,13 @@ ad_library {
 
 
 ad_proc -private cs_reps_of_cat {
-    contact_id args
+    args
 } {
     Returns user_ids of contact_id that are associate with category as a list.
     <br/>
-    For customer reps, contact_id is customer's contact_id.
+    For customer reps, contact_id is customer's contact_id from qal_contacts.
     <br/>
-    For support reps, contact_id is customer-support's contact_id.
+    For support reps, contact_id is instance_id from qc_set_instance_id
     <br/>
     <code>args</code> can be passed as name value list or left empty for all cases.
     <br>
@@ -36,9 +36,9 @@ ad_proc -private cs_reps_of_cat {
     } 
 
     if { [llength $role_ids_list] > 0 } {
-        
+        if { $contact_id ne $
             # get user_ids limited by hf_role_id in one query
-        set user_ids_list [qc_user_ids_of_contact_id $customer_id $role_ids_list]
+        set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
     }
     # add user_ids from cs_cat_assignment_map
 
