@@ -36,8 +36,7 @@ ad_proc -private cs_reps_of_cat {
     } 
 
     if { [llength $role_ids_list] > 0 } {
-        if { $contact_id ne $
-            # get user_ids limited by hf_role_id in one query
+        # get user_ids limited by hf_role_id in one query
         set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
     }
     # add user_ids from cs_cat_assignment_map
