@@ -1,4 +1,4 @@
-1;4205;0c-- customer-service-create.sql
+-- customer-service-create.sql
 --
 -- @license GNU GENERAL PUBLIC LICENSE, Version 2
 
