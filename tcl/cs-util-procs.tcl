@@ -187,12 +187,23 @@ ad_proc -private cs_category_create {
 }
 
 ad_proc -private cs_category_trash {
-
+    id_list
 } {
-    Trashes a category entry.
+    Trashes a category entry by setting active_p false.
 
     @return 1 if trashed. Otherwise returns 0
+} {
+    upvar 1 instance_id instance_id
+    set  id2_list [qf_listify $id_list]
+    set success_p 0
+    if { [llength $id2_list ] > 0 } {
+        set success_p [hf_natural_number_list_validate $id2_list]
+   
+        db_dml cs_categories_trash "update cs_categories set active_p='0' where instance_id=:instannce_id and id in ([template::util::tcl_to_sql_list])"
+    }
+    return $success_p
 }
+
 
 
 # cs_notify_customer_reps $ticket
