@@ -11,7 +11,7 @@ ad_library {
     
 }
 
-# qc_properties  returns list of properties
+# qc_properties  returns list of properties (defined in accounts-ledger)
 
 ad_proc -private cs_customer_ids_of_user_id { 
     {user_id ""}
@@ -134,15 +134,56 @@ ad_proc -private cs_customer_id_of_ref {
 
 
 ad_proc -private cs_category_create {
-
+    args
 } {
-    Create a category entry.
+    Create a category entry. args are: parent_id order_value label name active_p cs_property_label cc_property_label description.
+    <br/>
+    cs_property_label is the property label for customer support reps. default: non_assets
+    <br/>
+    cc_property_label is the property label for customers. default: non_assets
 
-    @return 1 if created. Otherwise returns 0.
+
+    @return id if created. Otherwise returns empty string.
 } {
     upvar 1 instance_id instance_id
-    set success_p 1
+    set id ""
+    set parent_id ""
+    set order_value "100"
+    set label ""
+    set name ""
+    set active_p 1
+    set cs_property_label "non_assets"
+    set cc_property_label "non_assets"
+    set description ""
 
+    set key_list [list ]
+    set val_list [list ]
+    foreach {name value} $args {
+        lappend key_list $name
+        lappend val_list $value
+    }
+
+    # validate
+    set active_p [qf_is_true $active_p]
+    set ov_ok [qf_is_natural_number $order_value]
+    set name [qf_abbrev $name 78]
+    if { $label eq "" } {
+        set label [qf_abbrev $name 38]
+        regsub -all -- { } $label {_} label
+    } else {
+        set label [qf_abbrev $label 38]        
+    }
+    set pl_list [qc_property_list $instance_id]
+    if { $cs_property_label in $pl_list && $cc_property_label in $pl_list } {
+        set id [db_nextval cs_id_seq]
+        db_dml cs_categories_write { insert into cs_categories 
+            (instance_id,id,parent_id,order_value,label,name,active_p,cs_property_label,cc_property_label,description)
+            values (:instance_id,:id,:parent_id,:order_value,:label,:name,:active_p,:cs_property_label,:cc_property_label,:description)
+        }
+    } else {
+        ns_log Notice "cs_category_create: failed. instance_id '${instance_id}' label '${label}' cs_property_label '${cs_property_label}' cc_property_label '${cc_property_label}'"
+    }
+    return $id
 }
 
 ad_proc -private cs_category_trash {
