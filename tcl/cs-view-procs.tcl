@@ -26,6 +26,8 @@ ad_proc -private cs_reps_of_cat {
     Accepted names are: <code>category_id</code>, <code>parent_id</code>, and <code>label</code>.
     <br>
 } {
+    upvar 1 instance_id instance_id
+    ##code
     # read cs_categories.property_label
     # convert to property_id
     set property_id [qc_property_id $property_label $instance_id]
@@ -42,7 +44,6 @@ ad_proc -private cs_reps_of_cat {
     # add user_ids from cs_cat_assignment_map
 
 }
-
 
 
 ad_proc -private cs_cat_role_map_read {

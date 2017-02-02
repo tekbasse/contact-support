@@ -204,6 +204,24 @@ ad_proc -private cs_category_trash {
     return $success_p
 }
 
+ad_proc -private cs_support_reps_of_ticket { 
+    ticket_id
+} {
+    Returns list of user_ids of customer support reps associated with ticket.
+} {
+    ##code
+
+}
+
+ad_proc -private cs_customer_reps_of_ticket {
+    ticket_id
+} {
+    Returns list of user_ids of customer reps associated with ticket.
+} {
+    ##code
+
+}
+    
 
 ad_proc -private cs_notify_customer_reps {
     ticket_id
@@ -220,7 +238,7 @@ ad_proc -private cs_notify_customer_reps {
 
     # What users to send alert to?
    ## set config_list [hf_monitor_configs_read $asset_id $instance_id]
-    set users_list [hf_nc_users_of_asset_id $asset_id $instance_id $alert_by_privilege $alert_by_role]
+    set users_list [cs_]
     if { [llength $users_list] > 0 } {
         # get TO emails from user_id
         set email_addrs_list [list ]
