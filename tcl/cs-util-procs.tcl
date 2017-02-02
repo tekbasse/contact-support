@@ -205,13 +205,86 @@ ad_proc -private cs_category_trash {
 }
 
 
+ad_proc -private cs_notify_customer_reps {
+    ticket_id
+} {
+    Notify customer reps that subscribe to ticket.
+} {
+    ##code
+    # based on hf_monitor_alert_trigger
+    # sender email is systemowner
+    # to get user_id of systemowner:
+    # party::get_by_email -email $email
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
 
-# cs_notify_customer_reps $ticket
+    # What users to send alert to?
+   ## set config_list [hf_monitor_configs_read $asset_id $instance_id]
+    set users_list [hf_nc_users_of_asset_id $asset_id $instance_id $alert_by_privilege $alert_by_role]
+    if { [llength $users_list] > 0 } {
+        # get TO emails from user_id
+        set email_addrs_list [list ]
+        foreach uid $users_list {
+            lappend email_addrs_list [party::email -party_id $uid]
+        }
+        
+        # What else is needed to send alert message?
+        set subject "#hosting-farm.Alert# #hosting-farm.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
+        set body $alert_message
+        # post to logged in user pages 
+        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
 
-# URL to ticket or ticket/message (handled by www/index.vuh)
-# cs_ticket_to_url ticket_nbr (message_nbr), if message_nbr supplied, just ref message #
-#  if ticket and message# supplied, url should be for whole ticket with #message via ID tag.
-# ticket number is unqiue alphanumeric reference to hide system ticket and message number, based on open timestamp.
+        # send email message
+        append body "#hosting-farm.Alerts_can_be_customized#. #hosting-farm.See_asset_configuration_for_details#."
+        acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
+
+        # log/update alert status
+        if { $immediate_p } {
+            # show email has been sent
+            
+        } else {
+            # show email has been scheduled for sending.
+
+
+        }
+    }
+    return 1
+}
+
+
+ad_proc -private cs_notify_support_reps {
+    ticket
+} {
+    Notify support reps that subscribe to ticket.
+} {
+    ##code
+    # based on hf_monitor_alert_trigger
+
+}
+
+ad_proc -private cs_ticket_id_of_ref {
+    ticket_ref
+} {
+    Returns internal ticket_id associated with ticket_ref
+} {
+    ##code
+    # URL to ticket or ticket/message 
+
+    #Use case: (handled by www/index.vuh)
+    # cs_ticket_to_url ticket_nbr (message_nbr), if message_nbr supplied, just ref message #
+    #  if ticket and message# supplied, url should be for whole ticket with #message via ID tag.
+    # ticket number is unqiue alphanumeric reference to hide system ticket and message number.
+
+}
+
+ad_proc -private cs_ticket_ref_of_id {
+    ticket_id
+} {
+    Returns external ticket_ref associated with ticket_id
+} {
+    ##code
+
+}
 
 
 ad_proc -private cs_ticket_action_log_cr {

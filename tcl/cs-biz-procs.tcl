@@ -28,7 +28,6 @@ ad_library {
 
 # cs_ticket_message_create
 
-
 # cs_cats_of_role_read
 # cs_roles_of_cat_read
 
