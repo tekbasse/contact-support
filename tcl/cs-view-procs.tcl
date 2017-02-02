@@ -57,13 +57,50 @@ ad_proc -private cs_cat_role_map_read {
     Accepted names are: <code>category_id</code>, <code>parent_id</code>, and <code>label</code>.
     <br>
 } {
+    upvar 1 instance_id instance_id
+    ##code
 
 }
 
-# cs_tickets
+ad_proc -private cs_tickets {
+    {user_id ""}
+} {
+    Lists tickets for user_id.
+} {
+    upvar 1 instance_id instance_id
+    # cs_tickets
+    ##code
+}
 
-# cs_stats_til_ticket_response (only for nonscheduled events)
+ad_proc -private cs_est_customer_response_time {
+} {
+    Returns anticipated customer response time as a cobbler list, fixed system time vs. historical probability
+} {
+    upvar 1 instance_id instance_id
+    # cs_anticipated_customer_response_time
+    ##code
 
-# cs_stats_til_ticket_close (only for nonscheduled_events)
 
-# cs_anticipated_customer_response_time
+}
+
+# The following will be called in lib as includes, but
+# also maybe in cron monitoring procs, which is why these are procs:
+
+ad_proc -private cs_stats_ticket_response {
+} {
+    Returns estimated time for ticket response (for nonscheduled events).
+} {
+    upvar 1 instance_id instance_id
+    # cs_stats_til_ticket_response (only for nonscheduled events)
+    ##code
+}
+
+ad_proc -private cs_stats_ticket_close {
+} {
+    Returns estimated time for ticket resolution (for nonscheduled events).
+} {
+    upvar 1 instance_id instance_id
+    # cs_stats_til_ticket_close (only for nonscheduled_events)
+    ##code
+
+}
