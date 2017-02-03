@@ -216,12 +216,10 @@ ad_proc -private cs_support_reps_of_ticket {
     Returns list of user_ids of customer support reps associated with ticket.
 } {
     upvar 1 instance_id instance_id
-    db_list cs_support_rep_ticket_map_r_uid {select user_id from cs_support_rep_ticket_map
+    set uid_list [db_list cs_support_rep_ticket_map_r_uid {select user_id from cs_support_rep_ticket_map
         where instance_id=:instance_id
-        and ticket_id=:ticket_id
-    }
-    # a list
-    return $user_id
+        and ticket_id=:ticket_id}]
+    return $uid_list
 }
 
 ad_proc -private cs_customer_reps_of_ticket {
@@ -230,17 +228,17 @@ ad_proc -private cs_customer_reps_of_ticket {
     Returns list of user_ids of customer reps associated with ticket.
 } {
     upvar 1 instance_id instance_id
-    db_list cs_customer_rep_ticket_map_r_uid {select user_id from cs_customer_rep_ticket_map
+    set uid_list [db_list cs_customer_rep_ticket_map_r_uid {select user_id from cs_customer_rep_ticket_map
         where instance_id=:instance_id
-        and ticket_id=:ticket_id
-    }
-    # a list
-    return $user_id
+        and ticket_id=:ticket_id}]
+    return $uid_list
 }
     
 
 ad_proc -private cs_notify_customer_reps {
     ticket_id
+    {subject ""}
+    {message ""}
 } {
     Notify customer reps that subscribe to ticket.
 } {
@@ -254,8 +252,7 @@ ad_proc -private cs_notify_customer_reps {
     set sysowner_user_id [party::get_by_email -email $sysowner_email]
 
     # What users to send alert to?
-   ## set config_list [hf_monitor_configs_read $asset_id $instance_id]
-    set users_list [cs_]
+    set users_list [cs_customer_reps_of_ticket $ticket_id]
     if { [llength $users_list] > 0 } {
         # get TO emails from user_id
         set email_addrs_list [list ]
@@ -264,13 +261,14 @@ ad_proc -private cs_notify_customer_reps {
         }
         
         # What else is needed to send alert message?
-        set subject "#hosting-farm.Alert# #hosting-farm.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
+        set ticket_ref [cs_t_ref_from_id $ticket_id]
+        set subject "#customer-service.ticket# #customer-service.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
         set body $alert_message
         # post to logged in user pages 
-        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
+        hf_log_create $asset_id "#customer-service.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
 
         # send email message
-        append body "#hosting-farm.Alerts_can_be_customized#. #hosting-farm.See_asset_configuration_for_details#."
+        append body "#customer-service.Alerts_can_be_customized#. #customer-service.See_asset_configuration_for_details#."
         acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
 
         # log/update alert status
@@ -293,7 +291,7 @@ ad_proc -private cs_notify_support_reps {
     Notify support reps that subscribe to ticket.
 } {
     ##code
-    # based on hf_monitor_alert_trigger
+    # based on cs_notify_customer_reps
 
 }
 

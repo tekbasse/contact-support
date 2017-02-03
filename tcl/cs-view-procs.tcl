@@ -46,30 +46,60 @@ ad_proc -private cs_reps_of_cat {
 }
 
 
-ad_proc -private cs_cat_role_map_read {
-    args
+ad_proc -private cs_cat_cs_property_label {
+    category_id
 } {
-    Returns one roles associated with a category as a tcl list of lists.
-    
-    <br/>
-    <code>args</code> can be passed as name value list or left empty for all cases.
-    <br>
-    Accepted names are: <code>category_id</code>, <code>parent_id</code>, and <code>label</code>.
-    <br>
+    Returns property_label associated with a category for customer support reps, or empty string if not available.
 } {
     upvar 1 instance_id instance_id
-    ##code
-
+    set cs_property_label ""
+    db_0or1row cs_categories_r_cspl {select cs_property_label from cs_categories 
+        where id=:category_id
+        and instance_id=:instance_id
+        and active_p!='0'
+    }
+    return $cs_property_label
 }
 
-ad_proc -private cs_tickets {
+ad_proc -private cs_cat_cc_property_label {
+    category_id
+} {
+    Returns property_label associated with a category for customer reps.
+} {
+    upvar 1 instance_id instance_id
+    set cc_property_label ""
+    db_0or1row cs_categories_r_cspl {select cc_property_label from cs_categories 
+        where id=:category_id
+        and instance_id=:instance_id
+        and active_p!='0'
+    }
+    return $cc_property_label
+}
+
+ad_proc -private cs_tickets_assigned_to {
     {user_id ""}
 } {
-    Lists tickets for user_id.
+    Lists ticket_ids for a customer support user_id as a list.
 } {
     upvar 1 instance_id instance_id
     # cs_tickets
-    ##code
+    set id_list [db_list cs_support_rep_ticket_map {select ticket_id from cs_support_rep_ticket_map
+        where user_id=:user_id
+        and instance_id=:instance_id} ]
+    return $id_list
+}
+
+ad_proc -private cs_tickets_subscribed_to {
+    {user_id ""}
+} {
+    Lists ticket_ids for a customer rep user_id as a list.
+} {
+    upvar 1 instance_id instance_id
+    # cs_tickets
+    set id_list [db_list cs_customer_rep_ticket_map {select ticket_id from cs_customer_rep_ticket_map
+        where user_id=:user_id
+        and instance_id=:instance_id} ]
+    return $id_list
 }
 
 ad_proc -private cs_est_customer_response_time {
