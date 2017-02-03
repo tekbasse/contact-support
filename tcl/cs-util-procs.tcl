@@ -53,7 +53,7 @@ ad_proc -private cs_customer_ids_of_user_id {
 }
 
 
-ad_proc -private cs_id_from_t_ref {
+ad_proc -private cs_id_of_t_ref {
     t_ref
 } {
     Returns ticket or message_id from cs_ticket_ref_id_map
@@ -68,7 +68,7 @@ ad_proc -private cs_id_from_t_ref {
 }
 
 
-ad_proc -private cs_t_ref_from_id {
+ad_proc -private cs_t_ref_of_id {
     ticket_id
 } {
     Returns t_ref of ticket from ticket_id, or empty string if not found.
@@ -297,29 +297,6 @@ ad_proc -private cs_notify_support_reps {
 
 }
 
-ad_proc -private cs_ticket_id_of_ref {
-    ticket_ref
-} {
-    Returns internal ticket_id associated with ticket_ref
-} {
-    ##code
-    # URL to ticket or ticket/message 
-
-    #Use case: (handled by www/index.vuh)
-    # cs_ticket_to_url ticket_nbr (message_nbr), if message_nbr supplied, just ref message #
-    #  if ticket and message# supplied, url should be for whole ticket with #message via ID tag.
-    # ticket number is unqiue alphanumeric reference to hide system ticket and message number.
-
-}
-
-ad_proc -private cs_ticket_ref_of_id {
-    ticket_id
-} {
-    Returns external ticket_ref associated with ticket_id
-} {
-    ##code
-
-}
 
 
 ad_proc -private cs_ticket_action_log_cr {
