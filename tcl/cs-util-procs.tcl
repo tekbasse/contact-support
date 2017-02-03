@@ -60,9 +60,26 @@ ad_proc -private cs_id_from_t_ref {
 } {
     upvar 1 instance_id instance_id
     set id ""
-    db_0or1row cs_ticket_ref_id_map_r1 {select id from cs_ticket_ref_id_map
+    if { [string length $t_ref ] < 201 } {
+        db_0or1row cs_ticket_ref_id_map_r1 {select id from cs_ticket_ref_id_map
             where t_ref=:t_ref and instance_id=:instance_id }
+    }
     return $id
+}
+
+
+ad_proc -private cs_t_ref_from_id {
+    ticket_id
+} {
+    Returns t_ref of ticket from ticket_id, or empty string if not found.
+} {
+    upvar 1 instance_id instance_id
+    set t_ref ""
+    if { [qf_is_natural_number $ticket_id] } {
+        db_0or1row cs_ticket_ref_id_map_r2 {select t_ref from cs_ticket_ref_id_map
+            where t_ref=:t_ref and instance_id=:instance_id }
+    }
+    return $t_ref
 }
 
 
@@ -120,20 +137,6 @@ ad_proc -private cs_id_seq_nextval {
     return $id
 }
     
-ad_proc -deprecated cs_customer_id_of_ref {
-    c_ref
-} {
-    Returns customer_id (unique CS integer ref) of a possibly external customer_ref (noninteger).
-} {
-    ## This is redundant in the context of qal_entities/contacts
-
-    upvar 1 instance_id instance_id
-    set id ""
-    db_0or1row cs_customer_ref_id_map_r { select id from cs_customer_ref_id_map 
-        where c_ref=:cref 
-        and instance_id=:instance_id }
-    return $id
-}
 
 
 ad_proc -private cs_category_create {
@@ -212,8 +215,13 @@ ad_proc -private cs_support_reps_of_ticket {
 } {
     Returns list of user_ids of customer support reps associated with ticket.
 } {
-    ##code
-
+    upvar 1 instance_id instance_id
+    db_list cs_support_rep_ticket_map_r_uid {select user_id from cs_support_rep_ticket_map
+        where instance_id=:instance_id
+        and ticket_id=:ticket_id
+    }
+    # a list
+    return $user_id
 }
 
 ad_proc -private cs_customer_reps_of_ticket {
@@ -221,8 +229,13 @@ ad_proc -private cs_customer_reps_of_ticket {
 } {
     Returns list of user_ids of customer reps associated with ticket.
 } {
-    ##code
-
+    upvar 1 instance_id instance_id
+    db_list cs_customer_rep_ticket_map_r_uid {select user_id from cs_customer_rep_ticket_map
+        where instance_id=:instance_id
+        and ticket_id=:ticket_id
+    }
+    # a list
+    return $user_id
 }
     
 
@@ -232,7 +245,8 @@ ad_proc -private cs_notify_customer_reps {
     Notify customer reps that subscribe to ticket.
 } {
     ##code
-    # based on hf_monitor_alert_trigger
+
+    # based on hf_monitor_alert_trigger (code extracted below)
     # sender email is systemowner
     # to get user_id of systemowner:
     # party::get_by_email -email $email

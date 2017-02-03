@@ -92,12 +92,6 @@ drop index cs_announcements_id_idx;
 
 DROP TABLE cs_announcements;
 
-drop index cs_customer_ref_id_map_instance_id_idx;
-drop index cs_customer_ref_id_map_id_idx;
-drop index cs_customer_ref_id_map_ref_idx;
-
-DROP TABLE cs_customer_ref_id_map;
-
 drop index cs_ticket_ref_id_map_instance_idx;
 drop index cs_ticket_ref_id_map_id_idx;
 drop index cs_ticket_ref_id_map_ref_idx;
