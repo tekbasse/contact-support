@@ -22,6 +22,7 @@ create index cs_ticket_ref_id_map_ref_idx on cs_ticket_ref_id_map (t_ref);
 create index cs_ticket_ref_id_map_id_idx on cs_ticket_ref_id_map (id);
 create index cs_ticket_ref_id_map_instance_idx on cs_ticket_ref_id_map (instance_id);
 
+-- This table may be made redundant since customer_id is not an object_id
 CREATE TABLE cs_customer_ref_id_map (
     instance_id           integer,
     c_ref                 varchar(100),

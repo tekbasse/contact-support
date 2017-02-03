@@ -98,12 +98,15 @@ ad_proc -private cs_id_seq_nextval {
         if { $id ne "" } {
             set exists_p 1
             if { $count < 5 } {
-                ns_log Notice "cs_id_seq_nextval.79: generated a nonunique ref: '${t_ref}'. This should be rare."
+                ns_log Notice "cs_id_seq_nextval.79: \
+ generated a nonunique ref: '${t_ref}'. This should be rare."
             } elseif { $count < 90 } {
-                ns_log Warning "cs_id_seq_nextval.81: is generating too many ref. collisions. Change to another randomization proc."
+                ns_log Warning "cs_id_seq_nextval.81: \
+ is generating too many ref. collisions. Change to another randomization proc."
             } else {
                 # This should not happen.
-                ns_log Warning "cs_id_seq_nextval.84: Error. This is generating too many ref. collisions. Increasing length."
+                ns_log Warning "cs_id_seq_nextval.84: \
+ Error. This is generating too many ref. collisions. Increasing length."
                 incr t_len
             }
         } else {
@@ -117,13 +120,13 @@ ad_proc -private cs_id_seq_nextval {
     return $id
 }
     
-ad_proc -private cs_customer_id_of_ref {
+ad_proc -deprecated cs_customer_id_of_ref {
     c_ref
-    create_p "1"
 } {
     Returns customer_id (unique CS integer ref) of a possibly external customer_ref (noninteger).
-    Default create_p is to create a customer_id if one does not exist.
 } {
+    ## This is redundant in the context of qal_entities/contacts
+
     upvar 1 instance_id instance_id
     set id ""
     db_0or1row cs_customer_ref_id_map_r { select id from cs_customer_ref_id_map 
@@ -181,7 +184,8 @@ ad_proc -private cs_category_create {
             values (:instance_id,:id,:parent_id,:order_value,:label,:name,:active_p,:cs_property_label,:cc_property_label,:description)
         }
     } else {
-        ns_log Notice "cs_category_create: failed. instance_id '${instance_id}' label '${label}' cs_property_label '${cs_property_label}' cc_property_label '${cc_property_label}'"
+        ns_log Notice "cs_category_create: failed. \
+ instance_id '${instance_id}' label '${label}' cs_property_label '${cs_property_label}' cc_property_label '${cc_property_label}'"
     }
     return $id
 }
@@ -198,7 +202,6 @@ ad_proc -private cs_category_trash {
     set success_p 0
     if { [llength $id2_list ] > 0 } {
         set success_p [hf_natural_number_list_validate $id2_list]
-   
         db_dml cs_categories_trash "update cs_categories set active_p='0' where instance_id=:instannce_id and id in ([template::util::tcl_to_sql_list])"
     }
     return $success_p
