@@ -17,7 +17,22 @@ ad_proc -public cs_ticket_create {
     Create a ticket.
 } {
     upvar 1 instance_id instance_id
-    # cs_ticket_create (init new ticket, open, cs_ticket_message_create)
+    # init new ticket, open, 
+
+
+# if !$tickets.unscheduled_service_req_p
+#  ask customer when is preferred service time (in the first created message).
+#  in case of service interruptions are needed.
+#  and ask when is most important that interruptions are minimized.
+
+# if $tickets.scheduled_maint_req_p,
+# When $scheduled_operation_p ie scheduled, set notifications of
+# alert customers according to parameter SchedRemindersList
+#
+
+
+
+    # cs_ticket_message_create
 
 
 }
@@ -31,35 +46,144 @@ ad_proc -private cs_ticket_message_create {
 
 }
 
+ad_proc -public cs_announce {
+    announcement_text
+    ann_type
+    {customer_id_list ""}
+    {expiration ""}
+    {ticket_id ""}
+    {allow_html_p "0"}
+} {
+    Show announcment to customers who visit customer-service package. 
+    Expires when ticket_id expires or expiration, and/or manual expiration.
+    If allow_html_p is one, allows html to be in announcement_text
+    <br/>
+    If customer_id_list is not empty, announcement only applies to customers referenced in customer_id_list.
+    <br/>
+    Expiration can be relative tcl "now + 3 days, now + 3 hours, now + 15 minutes or yyyy-mm-dd hh:mm:ss"
 
-# cs_announce (cs rep to multple customers) 
+    @return 1 if no errors, otherwise returns 0.
+} {
+    set success_p 1
+
+    if { [catch {set expires_ts [clock scan $expiration] } result] } {
+        ns_log Notice "cs_announce: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
+        set success_p 0
+    } 
+
+    # cs_announce (cs rep to multple customers) 
     # Send announcement / notifiy to subset of customers by customer_ref, ticket_id is the one
     # that is related to announcement. When ticket_id closes, announcement closes.
 
-# cs_ticket_open (maybe it was closed)
-# cs_ticket_close_by_customer
-# cs_ticket_close_by_rep
+    ##code
+    
+    return $success_p
+}
 
-# cs_ticket_subscribe
-# cs_ticket_unsubscribe
-# cs_ticket_subscriptions_change
+ad_proc -public cs_ticket_open {
+    args
+} {
+    Open a customer-service ticket.
+
+    @return ticket_id, or empty string if fails.
+} {
+    upvar 1 instance_id instance_id
+    # Remember that it might have been closed (already exists and re-opened)
+    ##code
+
+    return $ticket_id
+}
 
 
+ad_proc -public cs_ticket_close_by_customer {
+    args
+} {
+    Close ticket by customer rep.
+} {
+    upvar 1 instance_id instance_id
+    set success_p 1
 
-# cs_ticket_message_create
+    ##code
+    return $success_p
+}
 
-# cs_cats_of_role_read
-# cs_roles_of_cat_read
+ad_proc -public cs_ticket_close_by_rep {
+    args
+} {
+    Close ticket by customer support.
+} {
+    upvar 1 instance_id instance_id
+    set success_p 1
+    ##code
 
-# if !$tickets.unscheduled_service_req_p
-#  ask customer when is preferred service time
-#  in case of service interruptions are needed.
-#  and ask when is most important that interruptions are minimized.
+    return $success_p
+}
 
-# if $tickets.scheduled_maint_req_p,
-# When $scheduled_operation_p ie scheduled, set notifications of
-# alert customers according to parameter SchedRemindersList
-#
+ad_proc -private cs_ticket_subscribe {
+    ticket_id
+    user_id_list
+} {
+    Subscribe user_ids to ticket.
+} {
+    upvar 1 instance_id instance_id
+    # subscribe user to ticket_id
+    set success_p 1
+
+    ##code
+    return $success_p
+}
+
+ad_proc -private cs_ticket_unsubscribe {
+    ticket_id
+    user_id_list
+} {
+    Unsubscribe user_ids to ticket.
+} {
+    upvar 1 instance_id instance_id
+    # unsubscribe user to ticket_id
+    set success_p 1
+
+    ##code
+    return $success_p
+}
+
+
+ad_proc -private cs_ticket_subscriptions_change {
+    args
+} {
+    Change subscriptions for a ticket.
+} {
+    upvar 1 instance_id instance_id
+    # cs_ticket_subscriptions_change
+    set success_p 1
+
+    ##code 
+    return $success_p
+}
+
+ad_proc -private cs_ticket_message_create {
+    args
+} {
+    Post a message to a ticket.
+} {
+    upvar 1 instance_id instance_id
+    # cs_ticket_subscriptions_change
+    set success_p 1
+
+    ##code 
+    return $success_p
+}
+
+
+ad_proc -private cs_categories {
+} {
+    Read categories as a list of lists.
+} {
+    upvar 1 instance_id instance_id
+    ##code
+    return $categories_lists
+}
+
 
 
 ad_proc -private cs_notify_customer_reps {
