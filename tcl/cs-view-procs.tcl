@@ -20,9 +20,11 @@ ad_proc -private cs_customer_reps_of_cat {
     customer_id is customer's contact_id from qal_contacts.
     <br/>
     <code>args</code> can be passed as name value list. Minimum required is contact_id and a category reference:
-    <br>
+    <br/>
     Accepted cs_categories.names are: <code>category_id</code>, <code>parent_id</code>, and <code>label</code>.
-    <br>
+    <br/>
+    Privilege is one of read,write,create,delete,admin. Default is write.
+    <br/>
     If there is an error, an empty list is returned.
 } {
     upvar 1 instance_id instance_id
@@ -31,7 +33,8 @@ ad_proc -private cs_customer_reps_of_cat {
     # and modification becomes more difficult if these use a single call point.
 
     set assigned_uids_list [list ]
-    qf_nv_list_to_vars $args [list category_id parent_id label contact_id]
+    set privilege "write"
+    qf_nv_list_to_vars $args [list category_id parent_id label contact_id privilege]
 
     # if category_id not avail, try parent_id as cateogry_id
     # if that is not avail, try label.
@@ -46,26 +49,33 @@ ad_proc -private cs_customer_reps_of_cat {
     }
     if { $cat_id ne "" } {
         set property_label [cs_cat_cc_property_label $cat_id]
-    
+        
         if { $property_label ne "" } {
             # convert to property_id
             set property_id [qc_property_id $property_label $instance_id]
-        
+            
             if { $property_id ne "" } {
                 set role_ids_list [qc_roles_of_prop_priv $property_id $privilege]
-        
+                
                 if { [llength $role_ids_list] > 0 } {
                     # get user_ids limited by hf_role_id in one query
                     set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
+
+                    # add user_ids from cs_cat_assignment_map
+                    set assigned_uids_list [db_list ]
+
+                } else {
+                    ns_log Notice "cs_customer_reps_of_cat: property_id '${property_id}' privilege '${privilege}'. no role_id found."
                 }
+            } else {
+                ns_log Notice "cs_customer_reps_of_cat: property_label '${property_label}' not found. property_id is blank."
             }
+        } else {
+            ns_log Notice "cs_customer_reps_of_cat: cat_id '${cat_id}' not found. property_label is blank."
         }
-        # add user_ids from cs_cat_assignment_map
-        set assigned_uids_list [db_list ]
     } else {
         ns_log Notice "cs_customer_reps_of_cat: category_id not found. category_id '${category_id} parent_id '${parent_id}' category label '${label}'"
     }
-}
     return $assigned_uids_list
 }
 
@@ -73,50 +83,67 @@ ad_proc -private cs_customer_reps_of_cat {
 ad_proc -private cs_support_reps_of_cat {
     args
 } {
-    Returns user_ids of arg: contact_id that are associate with category as a list.
+    Returns user_ids of args.
     <br/>
-    If arg: <code>type</code> is customer_id is customer's contact_id from qal_contacts.
+    <code>args</code> can be passed as name value list. Minimum required is contact_id and a category reference:
     <br/>
-    If arg: <code>type</code> is 'support' reps, contact_id is instance_id from qc_set_instance_id
-    <br/>
-    <code>args</code> can be passed as name value list or left empty for all cases.
-    <br>
     Accepted cs_categories.names are: <code>category_id</code>, <code>parent_id</code>, and <code>label</code>.
-    <br>
+    <br/>
+    Privilege is one of read,write,create,delete,admin. Default is write.
+    <br/>
+    <code>contact_id</code> is instance_id by default, but can be specified.
+    <br/>
     If there is an error, an empty list is returned.
 } {
     upvar 1 instance_id instance_id
+    # cs_customer_reps_of_cat and cs_support_reps_of_cat are separate, because
+    # this is a place where one or the other may be modified,
+    # and modification becomes more difficult if these use a single call point.
+
     set assigned_uids_list [list ]
-    qf_nv_list_to_vars $args [list category_id parent_id label contact_id type]
-    set types_list [list customer support]
-    if { $type in $types_list } {
-        # read cs_categories.property_label
-        # convert to property_id
-        set property_id [qc_property_id $property_label $instance_id]
-        
-        if { $property_id ne "" } {
-            set role_ids_list [qc_roles_of_prop_priv $property_id $privilege]
-            
-        } 
-        
-        if { [llength $role_ids_list] > 0 } {
-            # get user_ids limited by hf_role_id in one query
-            set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
+    set privilege "write"
+    set contact_id $instance_id
+    qf_nv_list_to_vars $args [list category_id parent_id label contact_id privilege]
+
+    # if category_id not avail, try parent_id as cateogry_id
+    # if that is not avail, try label.
+    if { ![qf_is_natural_number $category_id] } {
+        if { [qf_is_natural_number $parent_id ] } {
+            set cat_id $parent_id
+        } elseif { $label ne "" } {
+            set cat_id [cs_cat_id_of_label $label]
         }
-        # add user_ids from cs_cat_assignment_map
-        # if category_id not avail, try parent_id as cateogry_id
-        # if that is not avail, try label.
-        if { $category_id eq "" } {
-            if { $parent_id ne "" } {
-                set category_id $parent_id
-            } elseif { $label ne "" } {
-                
-                ##code
-            }
-        }
-        set assigned_uids_list [db_list ]
     } else {
-        ns_log Notice "cs_reps_of_cat: type '${type}' not valid. Must be 'customer' or 'support'"
+        set cat_id $category_id
+    }
+    if { $cat_id ne "" } {
+        set property_label [cs_cat_cc_property_label $cat_id]
+        
+        if { $property_label ne "" } {
+            # convert to property_id
+            set property_id [qc_property_id $property_label $instance_id]
+            
+            if { $property_id ne "" } {
+                set role_ids_list [qc_roles_of_prop_priv $property_id $privilege]
+                
+                if { [llength $role_ids_list] > 0 } {
+                    # get user_ids limited by hf_role_id in one query
+                    set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
+
+                    # add user_ids from cs_cat_assignment_map
+                    set assigned_uids_list [db_list ]
+
+                } else {
+                    ns_log Notice "cs_support_reps_of_cat: property_id '${property_id}' privilege '${privilege}'. no role_id found."
+                }
+            } else {
+                ns_log Notice "cs_support_reps_of_cat: property_label '${property_label}' not found. property_id is blank."
+            }
+        } else {
+            ns_log Notice "cs_support_reps_of_cat: cat_id '${cat_id}' not found. property_label is blank."
+        }
+    } else {
+        ns_log Notice "cs_support_reps_of_cat: category_id not found. category_id '${category_id} parent_id '${parent_id}' category label '${label}'"
     }
     return $assigned_uids_list
 }
