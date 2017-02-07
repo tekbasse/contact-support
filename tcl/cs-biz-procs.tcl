@@ -41,9 +41,15 @@ ad_proc -private cs_ticket_message_create {
     args
 } {
     Create a message for a ticket_id
+    <br/>
+    args: customer_id ticket_id privacy_level message internal_notes internal_p
+    <br/>
+    required args: ticket_id (message or internal_notes)
 } {
     upvar 1 instance_id instance_id
+    set user_id [ad_conn user_id]
     ##code
+    # 
 }
 
 ad_proc -public cs_announce {
