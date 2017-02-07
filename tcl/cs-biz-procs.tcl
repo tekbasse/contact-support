@@ -34,7 +34,7 @@ ad_proc -public cs_ticket_create {
 
     # cs_ticket_message_create
 
-
+##code
 }
 
 ad_proc -private cs_ticket_message_create {
@@ -43,7 +43,7 @@ ad_proc -private cs_ticket_message_create {
     Create a message for a ticket_id
 } {
     upvar 1 instance_id instance_id
-
+    ##code
 }
 
 ad_proc -public cs_announce {
@@ -190,6 +190,8 @@ ad_proc -private cs_notify_customer_reps {
     ticket_id
     {subject ""}
     {message ""}
+    {immediate_p "1"}
+    {message_id ""}
 } {
     Notify customer reps that subscribe to ticket.
 } {
@@ -228,8 +230,7 @@ ad_proc -private cs_notify_customer_reps {
             
         } else {
             # show email has been scheduled for sending.
-
-
+            ns_log Notice "cs_notify_customer_reps. ticket_id '${ticket_id}' message_id '${message_id}'"
         }
     }
     return 1
