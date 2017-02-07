@@ -317,6 +317,7 @@ create index cs_support_rep_ticket_map_instance_id_idx on cs_support_rep_ticket_
 
 -- Answers question, who is automatically assigned by ticket of posted category
 -- These are auxiliary assignments separate one from ones derived by cs_categories.property_label
+-- This table started as cs_cat_assignment_map
 CREATE TABLE cs_support_rep_cat_map (
        instance_id   integer,
        category_id   integer,

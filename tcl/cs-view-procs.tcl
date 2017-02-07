@@ -31,7 +31,7 @@ ad_proc -private cs_customer_reps_of_cat {
     # cs_customer_reps_of_cat and cs_support_reps_of_cat are separate, because
     # this is a place where one or the other may be modified,
     # and modification becomes more difficult if these use a single call point.
-
+    set user_ids_list [list ]
     set assigned_uids_list [list ]
     set privilege "write"
     qf_nv_list_to_vars $args [list category_id parent_id label contact_id privilege]
@@ -60,12 +60,9 @@ ad_proc -private cs_customer_reps_of_cat {
                 if { [llength $role_ids_list] > 0 } {
                     # get user_ids limited by hf_role_id in one query
                     set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
-
-                    # add user_ids from cs_cat_assignment_map
-                    set assigned_uids_list [db_list ]
-
                 } else {
                     ns_log Notice "cs_customer_reps_of_cat: property_id '${property_id}' privilege '${privilege}'. no role_id found."
+
                 }
             } else {
                 ns_log Notice "cs_customer_reps_of_cat: property_label '${property_label}' not found. property_id is blank."
@@ -76,6 +73,11 @@ ad_proc -private cs_customer_reps_of_cat {
     } else {
         ns_log Notice "cs_customer_reps_of_cat: category_id not found. category_id '${category_id} parent_id '${parent_id}' category label '${label}'"
     }
+    # add user_ids from cs_cat_assignment_map
+    set cc_uids_list [db_list cs_customer_rep_cat_map_read {select user_id from cs_customer_rep_cat_map 
+        where category_id=:category_id 
+        and instance_id=:instance_id}]
+    set assigned_uids_list [set_union $user_ids_list $cc_uids_list]
     return $assigned_uids_list
 }
 
@@ -99,7 +101,7 @@ ad_proc -private cs_support_reps_of_cat {
     # cs_customer_reps_of_cat and cs_support_reps_of_cat are separate, because
     # this is a place where one or the other may be modified,
     # and modification becomes more difficult if these use a single call point.
-
+    set user_ids_list [list ]
     set assigned_uids_list [list ]
     set privilege "write"
     set contact_id $instance_id
@@ -129,10 +131,6 @@ ad_proc -private cs_support_reps_of_cat {
                 if { [llength $role_ids_list] > 0 } {
                     # get user_ids limited by hf_role_id in one query
                     set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
-
-                    # add user_ids from cs_cat_assignment_map
-                    set assigned_uids_list [db_list ]
-
                 } else {
                     ns_log Notice "cs_support_reps_of_cat: property_id '${property_id}' privilege '${privilege}'. no role_id found."
                 }
@@ -145,6 +143,11 @@ ad_proc -private cs_support_reps_of_cat {
     } else {
         ns_log Notice "cs_support_reps_of_cat: category_id not found. category_id '${category_id} parent_id '${parent_id}' category label '${label}'"
     }
+    # add user_ids from cs_support_rep_cat_map
+    set cc_uids_list [db_list cs_support_rep_cat_map_read {select user_id from cs_support_rep_cat_map 
+        where category_id=:category_id 
+        and instance_id=:instance_id}]
+    set assigned_uids_list [set_union $user_ids_list $cc_uids_list]
     return $assigned_uids_list
 }
 
