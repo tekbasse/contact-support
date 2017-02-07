@@ -291,6 +291,7 @@ ad_proc -private cs_median_human_time {
     Only the most significant two units are returned.
     A minimum of three values required, otherwise empty string is returned.
 } {
+    set et_time ""
     set seconds_count [llength $seconds_list]
     if { $seconds_count > 3 } {
         set seconds_sorted_list [lsort -integer $seconds_list]
@@ -303,9 +304,9 @@ ad_proc -private cs_median_human_time {
             set days [expr { $median / $day_s } ]
             set median [expr { $median - ( $days * $day_s ) } ]
             if { $days > 1 } {
-                append etr_time " ${days} #customer-service.days#"
+                append et_time " ${days} #customer-service.days#"
             } else {
-                append etr_time " ${days} #customer-service.day#"
+                append et_time " ${days} #customer-service.day#"
             }
         } else {
             set days 0
@@ -314,9 +315,9 @@ ad_proc -private cs_median_human_time {
             set hours [expr { $median / $hour_s } ]
             set median [expr { $median - ( $hours * $hour_s ) } ]
             if { $hours > 1 } {
-                append etr_time " ${hours} #customer-service.hours#"
+                append et_time " ${hours} #customer-service.hours#"
             } else {
-                append etr_time " ${hours} #customer-service.hour#"
+                append et_time " ${hours} #customer-service.hour#"
             }
         } else {
             set hours 0
@@ -330,11 +331,11 @@ ad_proc -private cs_median_human_time {
         incr minutes 1
         if { $minutes > 0 && $days == 0 } {
             if { $minutes < 2 } {
-                append etr_time " ${minutes} #customer-service.minute#"
+                append et_time " ${minutes} #customer-service.minute#"
             } else {
-                append etr_time " ${minutes} #customer-service.minutes#"
+                append et_time " ${minutes} #customer-service.minutes#"
             }
         }
     }
-    return $etr_time
+    return $et_time
 }
