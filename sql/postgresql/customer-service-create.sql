@@ -317,7 +317,7 @@ create index cs_support_rep_ticket_map_instance_id_idx on cs_support_rep_ticket_
 
 -- Answers question, who is automatically assigned by ticket of posted category
 -- These are auxiliary assignments separate one from ones derived by cs_categories.property_label
-CREATE TABLE cs_cat_assignment_map (
+CREATE TABLE cs_support_rep_cat_map (
        instance_id   integer,
        category_id   integer,
        -- one record for each category
@@ -325,12 +325,28 @@ CREATE TABLE cs_cat_assignment_map (
        -- and / or references to a q-control roles for example.
        -- Multiple groups imply multiple rows. 
        -- No. This is too much complexity for use cases.
-       -- This is handled via cs_categories.property_label and cs_cat_assignment_map.user_id
+       -- This is handled via cs_categories.property_label and cs_support_rep_map.user_id
        -- group_ref    text
 );
-create index cs_cat_assignment_map_instance_id_idx on cs_cat_assignment_map(instance_id);
-create index cs_cat_assignment_map_category_id_idx on cs_cat_assignment_map(category_id);
-create index cs_cat_assignment_map_user_id_idx on cs_cat_assignment_map(user_id);
+create index cs_support_rep_map_instance_id_idx on cs_support_rep_map(instance_id);
+create index cs_support_rep_map_category_id_idx on cs_support_rep_map(category_id);
+create index cs_support_rep_map_user_id_idx on cs_support_rep_map(user_id);
+
+CREATE TABLE cs_customer_rep_cat_map (
+       instance_id   integer,
+       category_id   integer,
+       -- one record for each category
+       user_id       integer
+       -- and / or references to a q-control roles for example.
+       -- Multiple groups imply multiple rows. 
+       -- No. This is too much complexity for use cases.
+       -- This is handled via cs_categories.property_label and cs_customer_rep_cat_map.user_id
+       -- group_ref    text
+);
+create index cs_customer_rep_cat_map_instance_id_idx on cs_customer_rep_cat_map(instance_id);
+create index cs_customer_rep_cat_map_category_id_idx on cs_customer_rep_cat_map(category_id);
+create index cs_customer_rep_cat_map_user_id_idx on cs_customer_rep_cat_map(user_id);
+
 
 -- These get posted to cs_ticket_messages at time of trigger_ts
 CREATE TABLE cs_sched_messages (
