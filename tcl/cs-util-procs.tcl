@@ -283,3 +283,58 @@ ad_proc -private cs_ticket_action_log_cr {
     }
     return $success_p
 }
+
+ad_proc -private cs_median_human_time {
+    seconds_list
+} {
+    Converts a list of integer seconds into a median value in common time units of days, hours, minutes.
+    Only the most significant two units are returned.
+    A minimum of three values required, otherwise empty string is returned.
+} {
+    set seconds_count [llength $seconds_list]
+    if { $seconds_count > 3 } {
+        set seconds_sorted_list [lsort -integer $seconds_list]
+        set median_idx [expr { $seconds_count / 2} ]
+        set median [lindex $seconds_sorted_list $median_idx]
+        set day_s 86400
+        set hour_s 3600
+        set minute_s 60
+        if { $median > $day_s } {
+            set days [expr { $median / $day_s } ]
+            set median [expr { $median - ( $days * $day_s ) } ]
+            if { $days > 1 } {
+                append etr_time " ${days} #customer-service.days#"
+            } else {
+                append etr_time " ${days} #customer-service.day#"
+            }
+        } else {
+            set days 0
+        }
+        if { $median > $hour_s } {
+            set hours [expr { $median / $hour_s } ]
+            set median [expr { $median - ( $hours * $hour_s ) } ]
+            if { $hours > 1 } {
+                append etr_time " ${hours} #customer-service.hours#"
+            } else {
+                append etr_time " ${hours} #customer-service.hour#"
+            }
+        } else {
+            set hours 0
+        }
+        if { $median > $minute_s } {
+            set minutes [expr { $median / $minute_s } ]
+            set median [expr { $median - ( $minutes * $minute_s ) } ]
+        } else {
+            set minutes 0
+        }
+        incr minutes 1
+        if { $minutes > 0 && $days == 0 } {
+            if { $minutes < 2 } {
+                append etr_time " ${minutes} #customer-service.minute#"
+            } else {
+                append etr_time " ${minutes} #customer-service.minutes#"
+            }
+        }
+    }
+    return $etr_time
+}

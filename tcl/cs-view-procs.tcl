@@ -212,29 +212,19 @@ ad_proc -private cs_est_customer_response_time {
     customer_id
 } {
     Returns anticipated customer response time (median), or empty string if not enough info.
+    Currently only calcuates response times based on tickets requesting responses regarding scheduled operations.
 } {
     upvar 1 instance_id instance_id
     # Maybe later make a proc that returns a cobbler list, fixed system time vs. historical probability
     # aka cs_anticipated_customer_response_time
-    set ecr_time ""
     set fr_s_list [db_list cs_ticket_stats_ecr {select cs_first_response_s from cs_ticket_stats
         where instance_id=:instance_id
         and ticket_id in (select ticket_id from cs_tickets
                           where customer_id=:customer_id
-                          and unscheduled_service_req_p='1'
+                          and ( scheduled_operation_p='1' or scheduled_maint_req_p='1' )
                           and instance_id=:instance_id ) } ]
-    set fr_s_count [llength $fr_s_list]
-    if { $fr_s_count > 3 } {
-        set fr_s_sorted_list [lsort -integer $fr_s_list]
-        set median_idx [expr { $fr_s_count / 2} ]
-        set median [lindex $fr_s_sorted_list $median_idx]
-        if { $median > 86400 } {
-            set days [expr { $median / 86400 } ]
-        } else {
-            set days 0
-        }
-##code
-
+    set ecr_time [cs_median_human_time $fr_s_list]
+    return $ecr_time
 }
 
 # The following will be called in lib as includes, but
@@ -242,11 +232,15 @@ ad_proc -private cs_est_customer_response_time {
 
 ad_proc -private cs_stats_ticket_response {
 } {
-    Returns estimated time for ticket response (for nonscheduled events).
+    Returns estimated time for ticket response from support (for nonscheduled events).
 } {
     upvar 1 instance_id instance_id
     # cs_stats_til_ticket_response (only for nonscheduled events)
-    ##code
+    # esr = estimated support response time
+    set fr_s_list [db_list cs_ticket_stats_esr {select cs_first_response_s from cs_ticket_stats
+        where instance_id=:instance_id } ]
+    set esr_time [cs_median_human_time $fr_s_list]
+    return $esr_time
 }
 
 ad_proc -private cs_stats_ticket_close {
@@ -255,6 +249,9 @@ ad_proc -private cs_stats_ticket_close {
 } {
     upvar 1 instance_id instance_id
     # cs_stats_til_ticket_close (only for nonscheduled_events)
-    ##code
-
+    # etr = estimated time until resolution
+    set fr_s_list [db_list cs_ticket_stats_etr {select cs_final_response_s from cs_ticket_stats
+        where instance_id=:instance_id } ]
+    set etr_time [cs_median_human_time $fr_s_list]
+    return $etr_time
 }
