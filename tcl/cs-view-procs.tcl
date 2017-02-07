@@ -209,13 +209,31 @@ ad_proc -private cs_tickets_subscribed_to {
 }
 
 ad_proc -private cs_est_customer_response_time {
+    customer_id
 } {
-    Returns anticipated customer response time as a cobbler list, fixed system time vs. historical probability
+    Returns anticipated customer response time (median), or empty string if not enough info.
 } {
     upvar 1 instance_id instance_id
-    # cs_anticipated_customer_response_time
-    ##code
-
+    # Maybe later make a proc that returns a cobbler list, fixed system time vs. historical probability
+    # aka cs_anticipated_customer_response_time
+    set ecr_time ""
+    set fr_s_list [db_list cs_ticket_stats_ecr {select cs_first_response_s from cs_ticket_stats
+        where instance_id=:instance_id
+        and ticket_id in (select ticket_id from cs_tickets
+                          where customer_id=:customer_id
+                          and unscheduled_service_req_p='1'
+                          and instance_id=:instance_id ) } ]
+    set fr_s_count [llength $fr_s_list]
+    if { $fr_s_count > 3 } {
+        set fr_s_sorted_list [lsort -integer $fr_s_list]
+        set median_idx [expr { $fr_s_count / 2} ]
+        set median [lindex $fr_s_sorted_list $median_idx]
+        if { $median > 86400 } {
+            set days [expr { $median / 86400 } ]
+        } else {
+            set days 0
+        }
+##code
 
 }
 
