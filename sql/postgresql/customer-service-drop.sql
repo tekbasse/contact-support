@@ -15,19 +15,19 @@ drop index cs_sched_messages_instance_id_idx;
 
 DROP TABLE cs_sched_messages;
 
-drop index cs_customer_rep_map_user_id_idx;
-drop index cs_customer_rep_map_category_id_idx;
-drop index cs_customer_rep_map_instance_id_idx;
+drop index cs_customer_rep_cat_map_user_id_idx;
+drop index cs_customer_rep_cat_map_category_id_idx;
+drop index cs_customer_rep_cat_map_instance_id_idx;
 
-DROP TABLE cs_customer_rep_map;
+DROP TABLE cs_customer_rep_cat_map;
 
 
 
-drop index cs_support_rep_map_user_id_idx;
-drop index cs_support_rep_map_category_id_idx;
-drop index cs_support_rep_map_instance_id_idx;
+drop index cs_support_rep_cat_map_user_id_idx;
+drop index cs_support_rep_cat_map_category_id_idx;
+drop index cs_support_rep_cat_map_instance_id_idx;
 
-DROP TABLE cs_support_rep_map;
+DROP TABLE cs_support_rep_cat_map;
 
 
 drop index cs_support_rep_ticket_map_instance_id_idx;

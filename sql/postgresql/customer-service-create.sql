@@ -328,9 +328,9 @@ CREATE TABLE cs_support_rep_cat_map (
        -- This is handled via cs_categories.property_label and cs_support_rep_map.user_id
        -- group_ref    text
 );
-create index cs_support_rep_map_instance_id_idx on cs_support_rep_map(instance_id);
-create index cs_support_rep_map_category_id_idx on cs_support_rep_map(category_id);
-create index cs_support_rep_map_user_id_idx on cs_support_rep_map(user_id);
+create index cs_support_rep_cat_map_instance_id_idx on cs_support_rep_cat_map(instance_id);
+create index cs_support_rep_cat_map_category_id_idx on cs_support_rep_cat_map(category_id);
+create index cs_support_rep_cat_map_user_id_idx on cs_support_rep_cat_map(user_id);
 
 CREATE TABLE cs_customer_rep_cat_map (
        instance_id   integer,
