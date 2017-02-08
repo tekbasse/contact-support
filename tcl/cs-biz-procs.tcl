@@ -14,11 +14,44 @@ ad_library {
 ad_proc -public cs_ticket_create {
     args
 } {
-    Create a ticket.
+    Create a ticket. Returns ticket_id. 
+    If ticket_ref_name is defined, assigns the variable name of ticket_ref_name to the ticket's external reference.
+    <br/>
+    args: 
 } {
     upvar 1 instance_id instance_id
-    # init new ticket, open, 
 
+    set p [list \
+               ticket_id \
+               ticket_ref_name \
+               customer_id \
+               authenticated_by \
+               ticket_category_id \
+               current_tier_level \
+               subject \
+               cs_open_p \
+               ignore_reopen_p \
+
+    qf_nv_list_to_vars $args $p
+           set trashed_p 0
+           if { $privacy_level eq "" } {
+               set package_id [ad_conn package_id]
+               set privacy_level [parameter::get -parameter privacyLevel -package_id $package_id]
+           }               
+           if { $ignore_reopen_p eq "" } {
+               set package_id [ad_conn package_id]
+               set ignore_reopen_p [parameter::get -parameter ignoreReopenP -package_id $package_id]
+           }               
+
+    # init new ticket, open,
+           set user_id [ad_conn user_id]
+           set cs_opened_by $user_id
+
+           # defaults to %Y-%m-%d %H:%M:%S
+           set cs_time_opened [dt_systime]
+           set user_open_p 1
+           set user_time_opened $cs_time_opened
+         
 
 # if !$tickets.unscheduled_service_req_p
 #  ask customer when is preferred service time (in the first created message).
@@ -201,8 +234,6 @@ ad_proc -private cs_notify_customer_reps {
 } {
     Notify customer reps that subscribe to ticket.
 } {
-    ##code
-
     # based on hf_monitor_alert_trigger (code extracted below)
     # sender email is systemowner
     # to get user_id of systemowner:
@@ -244,11 +275,49 @@ ad_proc -private cs_notify_customer_reps {
 
 
 ad_proc -private cs_notify_support_reps {
-    ticket
+    ticket_id
+    {subject ""}
+    {message ""}
+    {immediate_p "1"}
+    {message_id ""}
 } {
     Notify support reps that subscribe to ticket.
 } {
-    ##code
-    # based on cs_notify_customer_reps
+    # based on hf_monitor_alert_trigger (code extracted below)
+    # sender email is systemowner
+    # to get user_id of systemowner:
+    # party::get_by_email -email $email
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
 
+    # What users to send alert to?
+    set users_list [cs_support_reps_of_ticket $ticket_id]
+    if { [llength $users_list] > 0 } {
+        # get TO emails from user_id
+        set email_addrs_list [list ]
+        foreach uid $users_list {
+            lappend email_addrs_list [party::email -party_id $uid]
+        }
+        
+        # What else is needed to send alert message?
+        set ticket_ref [cs_t_ref_from_id $ticket_id]
+        set subject "#customer-service.ticket# #customer-service.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
+        set body $alert_message
+        # post to logged in user pages 
+        hf_log_create $asset_id "#customer-service.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
+
+        # send email message
+        append body "#customer-service.Alerts_can_be_customized#. #customer-service.See_asset_configuration_for_details#."
+        acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
+
+        # log/update alert status
+        if { $immediate_p } {
+            # show email has been sent
+            
+        } else {
+            # show email has been scheduled for sending.
+            ns_log Notice "cs_notify_support_reps. ticket_id '${ticket_id}' message_id '${message_id}'"
+        }
+    }
+    return 1
 }

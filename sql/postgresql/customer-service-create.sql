@@ -102,6 +102,8 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     trashed_p           varchar(1),
     -- Some ticket trackers lock a ticket to prevent reopening.
     -- Customers should be allowed to post more info for their own contextual notes.
+    -- Answers question: Allow a customer to keep a ticket open
+    -- or reopen it for their use without reopening ticket from a support perspective?
     ignore_reopen_p     varchar(1),
     -- Does this ticket represent a service outage or other situation
     -- needing immiediate ie unscheduled intervention?
