@@ -18,7 +18,7 @@ ad_proc -public cs_ticket_create {
     If ticket_ref_name is defined, assigns the variable name of ticket_ref_name to the ticket's external reference.
     <br/>
     args: 
-    customer_id authenticated_by ticket_category_id current_tier_level subject ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority
+    customer_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority
     <br/>
     See c_tickets table definition for usage.
 } {
@@ -32,6 +32,8 @@ ad_proc -public cs_ticket_create {
                ticket_category_id \
                current_tier_level \
                subject \
+               message \
+               internal_notes \
                cs_open_p \
                ignore_reopen_p \
                unsecheduled_service_req_p \
@@ -41,7 +43,7 @@ ad_proc -public cs_ticket_create {
                ticket_ref_name ]
 
     qf_nv_list_to_vars $args $p
-    
+
     if { $ticket_ref_name ne "" && [hf_list_filter_by_alphanum [list $ticket_ref_name]] } {
         upvar 1 $ticket_ref_name ticket_ref
     }
@@ -54,7 +56,7 @@ ad_proc -public cs_ticket_create {
         set package_id [ad_conn package_id]
         set ignore_reopen_p [parameter::get -parameter ignoreReopenP -package_id $package_id]
     }               
-    
+
     # init new ticket, open,
     set user_id [ad_conn user_id]
     set cs_opened_by $user_id
@@ -81,21 +83,20 @@ ad_proc -public cs_ticket_create {
          :scheduled_maint_req_p,:priority)
     }
 
-                
-    # if $tickets.scheduled_maint_req_p &&
-    #  && scheduled_operations_p == 1 then operation is just now scheduled with ticket creation.
-    # Trigger:
-    #  set notifications 
-    #  and possibly cs_announcements
-    #  timing of alert customers according to parameter SchedRemindersList
-#
+    cs_ticket_message_create ticket_id $ticket_id customer_id $customer_id privacy_level $privacy_level subject $subject message $message internal_notes $internal_notes internal_p $internal_p
 
-    # cs_ticket_message_create
+    if { $scheduled_maint_req_p && $scheduled_operations_p } {
 
-##code
+        # Operation has been scheduled with ticket creation.
 
-
-
+##code        
+        # Trigger:
+        #  set notifications 
+        #  and possibly cs_announcements
+        #  timing of alert customers according to parameter SchedRemindersList
+        #
+    }
+    return 1
 }
 
 ad_proc -private cs_ticket_message_create {
@@ -103,21 +104,32 @@ ad_proc -private cs_ticket_message_create {
 } {
     Create a message for a ticket_id
     <br/>
-    args: customer_id ticket_id privacy_level message internal_notes internal_p
+    args: customer_id ticket_id ticket_ref privacy_level message internal_notes internal_p
     <br/>
     required args: ticket_id (message or internal_notes)
 } {
     upvar 1 instance_id instance_id
-    set user_id [ad_conn user_id]
+    set p [list ticket_id ticket_ref privacy_level message internal_notes internal_p]
+    qf_nv_list_to_vars $args $p
+
+    set posted_by [ad_conn user_id]
+
+    set message_id [cs_id_seq_nextval message_ref]
+    # set message_ref  --external reference of message_id
+
     ##code
-    # 
+
+    set prior_sched_op_p 0
+    db_0or1row cs_tickets_sched_op_p_r {select scheduled_operation_p as prior_sched_op_p from cs_tickets
+        where ticket_id=:ticket_id
+        and instance_id=:instance_id}
+    if { $scheduled_maint_req_p && $scheduled_operations_p && !$prior_sched_op_p } {
                 
-# if $tickets.scheduled_maint_req_p && existing scheduled_operation_p == 0
-#  && scheduled_operations_p == 1 then operation is just now scheduled. Trigger:
-#  set notifications 
-#  and possibly cs_announcements
-#  timing of alert customers according to parameter SchedRemindersList
-#
+        # Operation is just now scheduled. Trigger:
+        #  set notifications 
+        #  and possibly cs_announcements
+        #  timing of alert customers according to parameter SchedRemindersList
+    }
 
 }
 
