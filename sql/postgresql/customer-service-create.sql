@@ -75,7 +75,7 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
  -- authenticated_by is handy for indirect posts (such as via call center operator)
     authenticated_by    varchar(40),
     -- current category_id
-    ticket_category_id  varchar(100),
+    ticket_category_id  integer,
     current_tier_level  integer,
     subject             varchar(100),
     -- ticket state for support.
