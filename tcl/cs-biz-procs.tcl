@@ -67,11 +67,6 @@ ad_proc -public cs_ticket_create {
     set ticket_id [cs_id_seq_nextval ticket_ref]
     #set ticket_ref  --corresponds to ticket_id
 
-## code   This comment gets moved to adp/tcl page:
-# if !$tickets.unscheduled_service_req_p
-#  ask customer when is preferred service time (in the first created message).
-#  in case of service interruptions are needed.
-#  and ask when is most important that interruptions are minimized.
     ns_log Notice "cs_ticket_create ticket_id '${ticket_id}' by user_id '${user_id}'"
     db_dml cs_tickets_cr {insert into cs_tickets
         (ticket_id,instance_id,customer_id,authenticated_by,ticket_category_id,
@@ -85,15 +80,19 @@ ad_proc -public cs_ticket_create {
          :ignore_reopen_p,:unscheduled_service_req_p,:scheduled_operation_p,
          :scheduled_maint_req_p,:priority)
     }
+
+                
+    # if $tickets.scheduled_maint_req_p &&
+    #  && scheduled_operations_p == 1 then operation is just now scheduled with ticket creation.
+    # Trigger:
+    #  set notifications 
+    #  and possibly cs_announcements
+    #  timing of alert customers according to parameter SchedRemindersList
+#
+
     # cs_ticket_message_create
 
 ##code
-                
-# if $tickets.scheduled_maint_req_p,
-# When $scheduled_operation_p ie scheduled, set notifications and
-# possibly cs_announcements
-#  timing of alert customers according to parameter SchedRemindersList
-#
 
 
 
@@ -112,6 +111,14 @@ ad_proc -private cs_ticket_message_create {
     set user_id [ad_conn user_id]
     ##code
     # 
+                
+# if $tickets.scheduled_maint_req_p && existing scheduled_operation_p == 0
+#  && scheduled_operations_p == 1 then operation is just now scheduled. Trigger:
+#  set notifications 
+#  and possibly cs_announcements
+#  timing of alert customers according to parameter SchedRemindersList
+#
+
 }
 
 ad_proc -public cs_announce {
