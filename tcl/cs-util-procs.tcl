@@ -91,7 +91,7 @@ ad_proc -private cs_id_seq_nextval {
 } {
     upvar 1 instance_id instance_id
     if { $t_ref_name ne "" } {
-        if { [hf_are_safe_and_visible_characters_q $t_ref_name] } {
+        if { [hf_list_filter_by_alphanum [list $t_ref_name]] } {
             upvar 1 $t_ref_name t_ref
         }
     }
