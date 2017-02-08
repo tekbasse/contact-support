@@ -31,26 +31,30 @@ ad_proc -public cs_ticket_create {
                subject \
                cs_open_p \
                ignore_reopen_p \
+               unsecheduled_service_req_p \
+               scheduled_operation_p \
+               scheduled_maint_req_p \
+               priority ]
 
     qf_nv_list_to_vars $args $p
-           set trashed_p 0
-           if { $privacy_level eq "" } {
-               set package_id [ad_conn package_id]
-               set privacy_level [parameter::get -parameter privacyLevel -package_id $package_id]
-           }               
-           if { $ignore_reopen_p eq "" } {
-               set package_id [ad_conn package_id]
-               set ignore_reopen_p [parameter::get -parameter ignoreReopenP -package_id $package_id]
-           }               
-
+    set trashed_p 0
+    if { $privacy_level eq "" } {
+        set package_id [ad_conn package_id]
+        set privacy_level [parameter::get -parameter privacyLevel -package_id $package_id]
+    }               
+    if { $ignore_reopen_p eq "" } {
+        set package_id [ad_conn package_id]
+        set ignore_reopen_p [parameter::get -parameter ignoreReopenP -package_id $package_id]
+    }               
+    
     # init new ticket, open,
-           set user_id [ad_conn user_id]
-           set cs_opened_by $user_id
-
-           # defaults to %Y-%m-%d %H:%M:%S
-           set cs_time_opened [dt_systime]
-           set user_open_p 1
-           set user_time_opened $cs_time_opened
+    set user_id [ad_conn user_id]
+    set cs_opened_by $user_id
+    
+    # defaults to %Y-%m-%d %H:%M:%S
+    set cs_time_opened [dt_systime]
+    set user_open_p 1
+    set user_time_opened $cs_time_opened
          
 
 # if !$tickets.unscheduled_service_req_p
