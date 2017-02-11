@@ -18,9 +18,12 @@ ad_proc -public cs_ticket_create {
     If ticket_ref_name is defined, assigns the variable name of ticket_ref_name to the ticket's external reference.
     <br/>
     args: 
-    customer_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority
+    customer_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority ann_type
     <br/>
-    See c_tickets table definition for usage.
+    See c_tickets table definition for usage. ann_type is from cs>announcements.ann_type
+    <br/>
+    To open a ticket with an announcement about a scheduled event, set ann_type to "MEMO"
+   
 } {
     upvar 1 instance_id instance_id
 
@@ -40,7 +43,8 @@ ad_proc -public cs_ticket_create {
                scheduled_operation_p \
                scheduled_maint_req_p \
                priority \
-               ticket_ref_name ]
+               ticket_ref_name \
+               ann_type ]
 
     qf_nv_list_to_vars $args $p
 
@@ -56,7 +60,6 @@ ad_proc -public cs_ticket_create {
         set package_id [ad_conn package_id]
         set ignore_reopen_p [parameter::get -parameter ignoreReopenP -package_id $package_id]
     }               
-
     # init new ticket, open,
     set user_id [ad_conn user_id]
     set cs_opened_by $user_id
@@ -65,11 +68,18 @@ ad_proc -public cs_ticket_create {
     set cs_time_opened [dt_systime]
     set user_open_p 1
     set user_time_opened $cs_time_opened
-         
+    
     set ticket_id [cs_id_seq_nextval ticket_ref]
     #set ticket_ref  --corresponds to ticket_id
-
     ns_log Notice "cs_ticket_create ticket_id '${ticket_id}' by user_id '${user_id}'"
+
+    if { $ann_type ne "" && [hf_list_filter_by_alphanum [list $ann_type]] } {
+        set ann_type [string range $ann_type 0 7]
+    } else {
+        set ann_type ""
+        ns_log Notice "cs_ticket_create: ann_type '${ann_type}' not valid. ignoring."
+    }
+
     db_dml cs_tickets_cr {insert into cs_tickets
         (ticket_id,instance_id,customer_id,authenticated_by,ticket_category_id,
          current_tier_level,subject,cs_open_p,opened_by,cs_time_opened,
@@ -85,14 +95,14 @@ ad_proc -public cs_ticket_create {
 
     cs_ticket_message_create ticket_id $ticket_id customer_id $customer_id privacy_level $privacy_level subject $subject message $message internal_notes $internal_notes internal_p $internal_p
 
-    if { $scheduled_maint_req_p && $scheduled_operations_p } {
+    if { $scheduled_maint_req_p && $scheduled_operations_p && $ann_type ne "" } {
 
         # Operation has been scheduled with ticket creation.
-
+        
+        # set any annoucements
+        # 
 ##code        
-        # Trigger:
-        #  set notifications 
-        #  and possibly cs_announcements
+
         #  timing of alert customers according to parameter SchedRemindersList
         #
     }

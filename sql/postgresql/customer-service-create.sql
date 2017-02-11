@@ -22,7 +22,9 @@ create index cs_ticket_ref_id_map_ref_idx on cs_ticket_ref_id_map (t_ref);
 create index cs_ticket_ref_id_map_id_idx on cs_ticket_ref_id_map (id);
 create index cs_ticket_ref_id_map_instance_idx on cs_ticket_ref_id_map (instance_id);
 
-
+-- For announcements related to scheduled events associated with a ticket_id, see:
+--  cs_sched_messages (trigger_ts, message, privacy_level, message_type)
+--  cs_ticket_op_periods (start_ts, end_ts)
 CREATE TABLE cs_announcements (
     instance_id           integer,
     id                    integer,
