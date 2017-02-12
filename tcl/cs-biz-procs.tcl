@@ -105,10 +105,12 @@ ad_proc -public cs_ticket_create {
         # Operation has been scheduled with ticket creation.
         # set any annoucements associated with schedule
         # in cs_ticket_op_periods
+        # using cs_announce
+
 
         # create cs_sched_messages record
         #  timing of alert customers according to parameter SchedRemindersList
-
+        # using cs_sched_messages_create
         ##code        
 
     }
@@ -181,6 +183,15 @@ ad_proc -public cs_announce {
     ##code
     
     return $success_p
+}
+
+ad_proc -private cs_sched_messages_create {
+    args
+} {
+    Create alerts for customer.
+} {
+    ##code
+
 }
 
 ad_proc -public cs_ticket_open {
@@ -264,18 +275,6 @@ ad_proc -private cs_ticket_subscriptions_change {
     return $success_p
 }
 
-ad_proc -private cs_ticket_message_create {
-    args
-} {
-    Post a message to a ticket.
-} {
-    upvar 1 instance_id instance_id
-    # cs_ticket_subscriptions_change
-    set success_p 1
-
-    ##code 
-    return $success_p
-}
 
 
 ad_proc -private cs_categories {
