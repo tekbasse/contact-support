@@ -18,9 +18,9 @@ ad_proc -public cs_ticket_create {
     If ticket_ref_name is defined, assigns the variable name of ticket_ref_name to the ticket's external reference.
     <br/>
     args: 
-    customer_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority ann_type
+    customer_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority ann_type ann_message ann_message_type
     <br/>
-    See c_tickets table definition for usage. ann_type is from cs>announcements.ann_type
+    See c_tickets table definition for usage. ann_type, ann_message, and ann_message_type is from cs_announcements table: ann_type, message, message_type 
     <br/>
     To open a ticket with an announcement about a scheduled event, set ann_type to "MEMO"
    
@@ -38,19 +38,24 @@ ad_proc -public cs_ticket_create {
                message \
                internal_notes \
                cs_open_p \
+               privacy_level \
                ignore_reopen_p \
                unsecheduled_service_req_p \
                scheduled_operation_p \
                scheduled_maint_req_p \
                priority \
                ticket_ref_name \
-               ann_type ]
+               ann_type \
+               ann_message
+               ann_message_type \
+               ]
 
     qf_nv_list_to_vars $args $p
 
     if { $ticket_ref_name ne "" && [hf_list_filter_by_alphanum [list $ticket_ref_name]] } {
         upvar 1 $ticket_ref_name ticket_ref
     }
+    set success_p 1
     set trashed_p 0
     if { $privacy_level eq "" } {
         set package_id [ad_conn package_id]
@@ -98,15 +103,16 @@ ad_proc -public cs_ticket_create {
     if { $scheduled_maint_req_p && $scheduled_operations_p && $ann_type ne "" } {
 
         # Operation has been scheduled with ticket creation.
-        
-        # set any annoucements
-        # 
-##code        
+        # set any annoucements associated with schedule
+        # in cs_ticket_op_periods
 
+        # create cs_sched_messages record
         #  timing of alert customers according to parameter SchedRemindersList
-        #
+
+        ##code        
+
     }
-    return 1
+    return $success_p
 }
 
 ad_proc -private cs_ticket_message_create {

@@ -359,6 +359,8 @@ CREATE TABLE cs_sched_messages (
        ticket_id      integer not null,
        -- time to trigger/post message
        trigger_ts     timestamptz,
+       -- triggered_p marked 1 after emails sent.
+       -- marked 0 until then.
        triggered_p    varchar(1),
        message        text,
        -- See cs_tickets  for more details.
@@ -376,6 +378,8 @@ CREATE TABLE cs_ticket_op_periods (
        instance_id    integer,
        ticket_id      integer not null,
        -- estimated, as in appointment time
+       -- Between this period and when (op_done_p is 0 and/or ticket_id is open), 
+       -- a message is shown to customer reps of cs_tickets.customer_id
        start_ts     timestamptz,
        end_ts       timestamptz,
        -- answers question:
