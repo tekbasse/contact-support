@@ -82,6 +82,28 @@ ad_proc -private cs_t_ref_of_id {
     return $t_ref
 }
 
+ad_proc -private cs_ticket_url_of_t_ref {
+    ticket_ref
+    {style "url"}
+} {
+    Returns ticket url of ticket_ref. Does not check for existence of ticket_ref.
+    Returns empty string if string does not appear to be a ticket_ref
+    If style is "link", returns a complete A tag instead of url.
+} {
+    set url ""
+    if { [hf_list_filter_by_alphanum [list $ticket_ref]] } { 
+        set package_id [ad_conn package_id]
+        set node_id [site_node::get_node_id_from_object_id -object_id $package_id]
+        set url [site_node::get_url -node_id $node_id]
+        append url $ticket_ref
+        if { $style eq "link" } {
+            set url "<a href=\"${url}\">${ticket_ref}</a>"
+        }
+    } else {
+        ns_log Warning "cs_ticket_url_of_t_ref: Not valid ticket_ref '${ticket_ref}'"
+    }
+    return $url
+}
 
 ad_proc -private cs_id_seq_nextval {
     {t_ref_name ""}

@@ -106,11 +106,12 @@ ad_proc -public cs_ticket_create {
         # set any annoucements associated with schedule
         # in cs_ticket_op_periods
         # using cs_announce
-
+        # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
 
         # create cs_sched_messages record
         #  timing of alert customers according to parameter SchedRemindersList
         # using cs_sched_messages_create
+        # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link 
         ##code        
 
     }
