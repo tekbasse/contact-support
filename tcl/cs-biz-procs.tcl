@@ -106,6 +106,10 @@ ad_proc -public cs_ticket_create {
         # set any annoucements associated with schedule
         # in cs_ticket_op_periods
         # using cs_announce
+        if { $ann_message eq "" } {
+            set ann_message $message
+        }
+        cs_announce 
         # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
 
         # create cs_sched_messages record
@@ -171,11 +175,24 @@ ad_proc -public cs_announce {
     @return 1 if no errors, otherwise returns 0.
 } {
     set success_p 1
-
+    # relatives okay with: clock format \[clock scan "now + 3 days"\]
+    # relative vocabulary includes year, month, week, day, hours, today, now 
     if { [catch {set expires_ts [clock scan $expiration] } result] } {
         ns_log Notice "cs_announce: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
         set success_p 0
-    } 
+    } else {
+        set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
+        set contact_id [qal_contact_id_from_customer_id $customer_id]
+        set tz [qal_contact_id_read $contact_id timezone user_id]
+        if { $tz eq "" && [qf_is_natural_number $user_id] } {
+            set tz [lang::user::timezone $user_id]
+        }
+        if { $tz eq "" } {
+            set tz [lang::system::timezone]
+            set expires_ltz [lc_time_utc_to_local_ $expires_yyyymmdd_hhmmss_utc $tz]
+        }
+    
+    }
 
     # cs_announce (cs rep to multple customers) 
     # Send announcement / notifiy to subset of customers by customer_ref, ticket_id is the one
