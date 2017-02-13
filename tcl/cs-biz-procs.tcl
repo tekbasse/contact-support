@@ -11,6 +11,9 @@ ad_library {
     
 }
 
+# customer-service.customer_id references refer to accounts-ledeger.contact_id
+# so that package can be used  with contacts, customers, or vendors.
+
 ad_proc -public cs_ticket_create {
     args
 } {

@@ -13,6 +13,9 @@ ad_library {
 
 # qc_properties  returns list of properties (defined in accounts-ledger)
 
+# customer-service.customer_id references refer to accounts-ledeger.contact_id
+# so that package can be used  with contacts, customers, or vendors.
+
 ad_proc -private cs_customer_ids_of_user_id { 
     {user_id ""}
 } {
@@ -43,12 +46,15 @@ ad_proc -private cs_customer_ids_of_user_id {
             set customer_id_list [qal_vendor_ids_of_user_id $user_id ]
         }
         3 {
-            ## maybe combine in another proc to reduce query load?
             set customer_id1_list [qal_customer_ids_of_user_id $user_id ]
             set customer_id2_list [qal_vendor_ids_of_user_id $user_id ]
             set customer_id_list [set_union $customer_id1_list $customer_id2_list]
+        } 
+        4 {
+            # all contacts user has access to
+            set customer_id_list [qal_contact_ids_of_user_id $user_id ]
         }
-    }
+   }
     return $customer_id_list
 }
 
