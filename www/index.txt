@@ -1,8 +1,8 @@
-#customer-service/www/index.vuh
+#contact-support/www/index.vuh
 
 #notes
-# if user has access to multiple customer_ids,
-# internal-redirect to www/customers  (choose customer)
+# if user has access to multiple contact_ids,
+# internal-redirect to www/contacts  (choose contact)
 
 # use cs_ticket_ref_of_id and cs_ticket_id_of_ref paradigm to hide id
 
