@@ -1,4 +1,4 @@
--- customer-service-create.sql
+-- contact-support-create.sql
 --
 -- @license GNU GENERAL PUBLIC LICENSE, Version 2
 
@@ -30,14 +30,14 @@ CREATE TABLE cs_announcements (
     id                    integer,
     -- Currently three types: 
     -- 1. BOLO (be on lookout for..)
-    --         Only associated with set of customer_id / cs_user_map
+    --         Only associated with set of contact_id / cs_user_map
     --         Not added to any ticket history.
-    --         Shown in customer-service user pages until expired or manually expired.
+    --         Shown in contact-support user pages until expired or manually expired.
     -- 2. MEMO 
-    --         Added to ticket history for each customer_ref, and notifications sent.
+    --         Added to ticket history for each contact_ref, and notifications sent.
     -- 3. LOG 
-    --         Added to internal ticket history for each customer_ref. 
-    --         Customers not notified or shown.
+    --         Added to internal ticket history for each contact_ref. 
+    --         Contacts not notified or shown.
     ann_type              varchar(8),
     -- If associated with a ticket id
     ticket_id             integer,
@@ -56,24 +56,24 @@ create index cs_announcements_expired_p_idx on cs_announcements (expired_p);
 create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
 
  -- terminology:   SST = support ticket state (open/closed)
- --                CST = customer ticket state (open/closed)
- -- When customer opens ticket, both CST and SST are opened for triage.
- -- When customer closes ticket, both CST and SST are closed.
+ --                CST = contact ticket state (open/closed)
+ -- When contact opens ticket, both CST and SST are opened for triage.
+ -- When contact closes ticket, both CST and SST are closed.
  -- When support closes ticket, both CST and SST are closed
- -- When customer re-opens ticket or replies to ticket, ticket is triaged again by first tier.
- -- When support triages ticket, and more info needed by customer,
+ -- When contact re-opens ticket or replies to ticket, ticket is triaged again by first tier.
+ -- When support triages ticket, and more info needed by contact,
  --      ticket is SST is closed, CST remains open.
  -- When support triages new ticket, 
  --      qualified ticket remains open for both CST & SST.
  --      support categories and assigns ticket to a tier level and priority if different than default.
  -- When support triages a previously closed ticket,
  --      qualified ticket remains open for both CST & SST, and notifications sent to previously assigned reps.
- --      otherwise SST is closed (with message sent to customer stating no support response needed).
- --      Customer asked to close CST ticket when they are finished with the topic internally.
+ --      otherwise SST is closed (with message sent to contact stating no support response needed).
+ --      Contact asked to close CST ticket when they are finished with the topic internally.
  CREATE TABLE cs_tickets (
     ticket_id           integer not null,
     instance_id         integer,
-    customer_id         integer not null,
+    contact_id         integer not null,
  -- authenticated_by is handy for indirect posts (such as via call center operator)
     authenticated_by    varchar(40),
     -- current category_id
@@ -88,7 +88,7 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     cs_time_opened      timestamptz not null,
     cs_time_closed      timestamptz,
     cs_closed_by        integer,
-    -- ticket state for customers.
+    -- ticket state for contacts.
     -- Cannot rely on date, because user_time_closed may exist from prior closing of ticket
     -- if for example user_time_opened is after user_time_closed
     user_open_p         varchar(1),
@@ -103,8 +103,8 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
     -- Is this ticket trashed?
     trashed_p           varchar(1),
     -- Some ticket trackers lock a ticket to prevent reopening.
-    -- Customers should be allowed to post more info for their own contextual notes.
-    -- Answers question: Allow a customer to keep a ticket open
+    -- Contacts should be allowed to post more info for their own contextual notes.
+    -- Answers question: Allow a contact to keep a ticket open
     -- or reopen it for their use without reopening ticket from a support perspective?
     ignore_reopen_p     varchar(1),
     -- Does this ticket represent a service outage or other situation
@@ -121,7 +121,7 @@ create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
 );
 
 create index cs_tickets_ticket_id_idx on cs_tickets (ticket_id);
-create index cs_tickets_customer_id_idx on cs_tickets (customer_id);
+create index cs_tickets_contact_id_idx on cs_tickets (contact_id);
 create index cs_tickets_instance_id_idx on cs_tickets (instance_id);
 create index cs_tickets_cs_open_p_idx on cs_tickets (cs_open_p);
 create index cs_tickets_user_open_p_idx on cs_tickets (user_open_p);
@@ -154,10 +154,10 @@ CREATE TABLE cs_ticket_action_log (
     -- cs_ticket_messages.internal_notes
 
     log_message        text,
-    -- cs_rep_ids and customer_user_ids should 
+    -- cs_rep_ids and contact_user_ids should 
     -- note actual subscriptions, not the changed ones.
     cs_rep_ids         text,
-    customer_user_ids  text,
+    contact_user_ids  text,
     -- These could change:
     -- a = assigned
     -- d = dropped
@@ -165,7 +165,7 @@ CREATE TABLE cs_ticket_action_log (
     -- o = re/opened
     -- 
     -- position 0 = cs_reps side
-    -- position 1 = customer side
+    -- position 1 = contact side
     op_type            varchar(8),
     -- operation initiated by (user_id of rep), or
     -- instance_id = assigned by software (package_id ie object_id)
@@ -199,7 +199,7 @@ CREATE TABLE cs_ticket_messages (
     -- This has been moved to cs_ticket_action_log
     -- assigned_to      text,
 
-    -- A space delimited list of initial customer user_ids. 
+    -- A space delimited list of initial contact user_ids. 
     -- Unsubscribing adds a message to that effect.
     -- Use cs_ticket_users_map for current ones.
     -- This has been moved to cs_ticket_action_log
@@ -215,19 +215,19 @@ create index cs_ticket_messages_instance_id_idx on  cs_ticket_messages (instance
 create index cs_ticket_messages_trashed_p_idx on cs_ticket_messages (trashed_p);
 create index cs_ticket_messages_post_id_idx on cs_ticket_messages (post_id);
 
-CREATE TABLE cs_customer_stats (
+CREATE TABLE cs_contact_stats (
     instance_id      integer,
-    customer_id      integer,
+    contact_id      integer,
     ticket_id        integer,
     -- The cs message_id might not be the prior id in a sequence.
-    -- Customer might post multiple messages between responses
+    -- Contact might post multiple messages between responses
     -- from cs.
     -- cs_message_id and message_id are the reference points
     -- for calculating duration_to_reply_s
     cs_message_id       integer,
     message_id          integer,
     duration_to_reply_s integer,
-    -- Day of week of customer reply. Hint:
+    -- Day of week of contact reply. Hint:
     -- clock format \clock seconds\ -format %w (or %u)
     -- 0 = Sunday, 1 = monday, 6 = saturday, 7 = sunday
     -- use int(fmod(%w or %u, 7)) to standardize Sundays to 0.
@@ -241,9 +241,9 @@ CREATE TABLE cs_customer_stats (
     time_m              integer
 );
 
-create index cs_customer_stats_ticket_id_idx on cs_customer_stats(ticket_id);
-create index cs_customer_stats_instance_id_idx on  cs_customer_stats(instance_id);
-create index cs_customer_stats_customer_id_idx on cs_customer_stats(customer_id);
+create index cs_contact_stats_ticket_id_idx on cs_contact_stats(ticket_id);
+create index cs_contact_stats_instance_id_idx on  cs_contact_stats(instance_id);
+create index cs_contact_stats_contact_id_idx on cs_contact_stats(contact_id);
 
  --aka canned_response table
 CREATE TABLE cs_message_templates (
@@ -254,7 +254,7 @@ CREATE TABLE cs_message_templates (
     label            varchar(30),
     title            varchar(100),
     subject          varchar(200),
-    -- this lists the variable names that customer service can
+    -- this lists the variable names that contact support can
     -- use in this particular email -- for info only
     variables        text,
     message_content  text,
@@ -278,13 +278,13 @@ CREATE TABLE cs_categories (
     active_p         varchar(1) default '1',
     -- qc_permission_p qc_property.property_label 
     -- Assume property_label is 'non_asset' unless specified.
-    -- This way, categories for customer can be filtered to just those with related role permission
-    -- Automatic customer subscriptions are based on those who have write/admin permission for property_label
+    -- This way, categories for contact can be filtered to just those with related role permission
+    -- Automatic contact subscriptions are based on those who have write/admin permission for property_label
     -- And cs_reps might be initially assigned based on role permission? No
     -- cs_reps assigned based on category and their concact_id's property label. 
     cs_property_label   varchar(24) default 'non_assets',
     -- and
-    -- customer reps based on customer_id property_label
+    -- contact reps based on contact_id property_label
     cc_property_label   varchar(24) default 'non_assets',
     description      text
 );
@@ -295,16 +295,16 @@ create index cs_categories_label_idx on cs_categories(label);
 create index cs_categories_parent_id_idx on cs_categories(parent_id);
 
 -- ticket_id subscribers (users) map
-CREATE TABLE cs_customer_rep_ticket_map (
+CREATE TABLE cs_contact_rep_ticket_map (
        instance_id   integer,
        ticket_id     integer,
-       -- one record for each customer / user_id that currently subscribes to ticket
+       -- one record for each contact / user_id that currently subscribes to ticket
        user_id       integer
 );
 
-create index cs_customer_rep_ticket_map_instance_id_idx on cs_customer_rep_ticket_map(instance_id);
-create index cs_customer_rep_ticket_map_ticket_id_idx on cs_customer_rep_ticket_map(ticket_id);
-create index cs_customer_rep_ticket_map_user_id_idx on cs_customer_rep_ticket_map(user_id);
+create index cs_contact_rep_ticket_map_instance_id_idx on cs_contact_rep_ticket_map(instance_id);
+create index cs_contact_rep_ticket_map_ticket_id_idx on cs_contact_rep_ticket_map(ticket_id);
+create index cs_contact_rep_ticket_map_user_id_idx on cs_contact_rep_ticket_map(user_id);
 
 
 -- ticket_id cs_rep (admins) map
@@ -337,7 +337,7 @@ create index cs_support_rep_cat_map_instance_id_idx on cs_support_rep_cat_map(in
 create index cs_support_rep_cat_map_category_id_idx on cs_support_rep_cat_map(category_id);
 create index cs_support_rep_cat_map_user_id_idx on cs_support_rep_cat_map(user_id);
 
-CREATE TABLE cs_customer_rep_cat_map (
+CREATE TABLE cs_contact_rep_cat_map (
        instance_id   integer,
        category_id   integer,
        -- one record for each category
@@ -345,12 +345,12 @@ CREATE TABLE cs_customer_rep_cat_map (
        -- and / or references to a q-control roles for example.
        -- Multiple groups imply multiple rows. 
        -- No. This is too much complexity for use cases.
-       -- This is handled via cs_categories.property_label and cs_customer_rep_cat_map.user_id
+       -- This is handled via cs_categories.property_label and cs_contact_rep_cat_map.user_id
        -- group_ref    text
 );
-create index cs_customer_rep_cat_map_instance_id_idx on cs_customer_rep_cat_map(instance_id);
-create index cs_customer_rep_cat_map_category_id_idx on cs_customer_rep_cat_map(category_id);
-create index cs_customer_rep_cat_map_user_id_idx on cs_customer_rep_cat_map(user_id);
+create index cs_contact_rep_cat_map_instance_id_idx on cs_contact_rep_cat_map(instance_id);
+create index cs_contact_rep_cat_map_category_id_idx on cs_contact_rep_cat_map(category_id);
+create index cs_contact_rep_cat_map_user_id_idx on cs_contact_rep_cat_map(user_id);
 
 
 -- These get posted to cs_ticket_messages at time of trigger_ts
@@ -379,7 +379,7 @@ CREATE TABLE cs_ticket_op_periods (
        ticket_id      integer not null,
        -- estimated, as in appointment time
        -- Between this period and when (op_done_p is 0 and/or ticket_id is open), 
-       -- a message is shown to customer reps of cs_tickets.customer_id
+       -- a message is shown to contact reps of cs_tickets.contact_id
        start_ts     timestamptz,
        end_ts       timestamptz,
        -- answers question:

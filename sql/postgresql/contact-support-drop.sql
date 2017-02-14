@@ -1,4 +1,4 @@
--- customer-service-drop.sql
+-- customer-support-drop.sql
 --
 -- @license GNU GENERAL PUBLIC LICENSE, Version 2
 
@@ -15,11 +15,11 @@ drop index cs_sched_messages_instance_id_idx;
 
 DROP TABLE cs_sched_messages;
 
-drop index cs_customer_rep_cat_map_user_id_idx;
-drop index cs_customer_rep_cat_map_category_id_idx;
-drop index cs_customer_rep_cat_map_instance_id_idx;
+drop index cs_contact_rep_cat_map_user_id_idx;
+drop index cs_contact_rep_cat_map_category_id_idx;
+drop index cs_contact_rep_cat_map_instance_id_idx;
 
-DROP TABLE cs_customer_rep_cat_map;
+DROP TABLE cs_contact_rep_cat_map;
 
 
 
@@ -36,11 +36,11 @@ drop index cs_support_rep_ticket_map_ticket_id_idx;
 
 DROP TABLE cs_support_rep_ticket_map;
 
-drop index cs_customer_rep_ticket_map_user_id_idx;
-drop index cs_customer_rep_ticket_map_ticket_id_idx;
-drop index cs_customer_rep_ticket_map_instance_id_idx;
+drop index cs_contact_rep_ticket_map_user_id_idx;
+drop index cs_contact_rep_ticket_map_ticket_id_idx;
+drop index cs_contact_rep_ticket_map_instance_id_idx;
 
-DROP TABLE cs_customer_rep_ticket_map;
+DROP TABLE cs_contact_rep_ticket_map;
 
 drop index cs_categories_parent_id_idx;
 drop index cs_categories_label_idx;
@@ -55,11 +55,11 @@ drop index cs_message_templates_template_id_idx;
 
 DROP TABLE cs_message_templates;
 
-drop index cs_customer_stats_customer_id_idx;
-drop index cs_customer_stats_instance_id_idx;
-drop index cs_customer_stats_ticket_id_idx;
+drop index cs_contact_stats_contact_id_idx;
+drop index cs_contact_stats_instance_id_idx;
+drop index cs_contact_stats_ticket_id_idx;
 
-DROP TABLE cs_customer_stats;
+DROP TABLE cs_contact_stats;
 
 drop index cs_ticket_messages_post_id_idx;
 drop index cs_ticket_messages_trashed_p_idx;
@@ -86,7 +86,7 @@ drop index cs_tickets_user_open_p_idx;
 drop index cs_tickets_cs_open_p_idx;
 drop index cs_tickets_instance_id_idx;
 drop index cs_tickets_ticket_id_idx;
-drop index cs_tickets_customer_id_idx;
+drop index cs_tickets_contact_id_idx;
 
 DROP TABLE cs_tickets;
 
