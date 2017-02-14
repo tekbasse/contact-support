@@ -1,23 +1,23 @@
-#customer-service/tcl/cs-view-procs.tcl
+#contact-support/tcl/cs-view-procs.tcl
 ad_library {
 
-    views for customer-service
+    views for contact-support
     @creation-date 21 Jan 2017
     @Copyright (c) 2017 Benjamin Brink
     @license GNU General Public License 2
-    @project home: http://github.com/tekbasse/customer-service
+    @project home: http://github.com/tekbasse/contact-support
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
     
 }
 
 
-ad_proc -private cs_customer_reps_of_cat {
+ad_proc -private cs_contact_reps_of_cat {
     args
 } {
     Returns user_ids of arg: contact_id that are associate with category as a list.
     <br/>
-    customer_id is customer's contact_id from qal_contacts.
+    contact_id is contact's contact_id from qal_contacts.
     <br/>
     <code>args</code> can be passed as name value list. Minimum required is contact_id and a category reference:
     <br/>
@@ -28,7 +28,7 @@ ad_proc -private cs_customer_reps_of_cat {
     If there is an error, an empty list is returned.
 } {
     upvar 1 instance_id instance_id
-    # cs_customer_reps_of_cat and cs_support_reps_of_cat are separate, because
+    # cs_contact_reps_of_cat and cs_support_reps_of_cat are separate, because
     # this is a place where one or the other may be modified,
     # and modification becomes more difficult if these use a single call point.
     set user_ids_list [list ]
@@ -61,20 +61,20 @@ ad_proc -private cs_customer_reps_of_cat {
                     # get user_ids limited by hf_role_id in one query
                     set user_ids_list [qc_user_ids_of_contact_id $contact_id $role_ids_list]
                 } else {
-                    ns_log Notice "cs_customer_reps_of_cat: property_id '${property_id}' privilege '${privilege}'. no role_id found."
+                    ns_log Notice "cs_contact_reps_of_cat: property_id '${property_id}' privilege '${privilege}'. no role_id found."
 
                 }
             } else {
-                ns_log Notice "cs_customer_reps_of_cat: property_label '${property_label}' not found. property_id is blank."
+                ns_log Notice "cs_contact_reps_of_cat: property_label '${property_label}' not found. property_id is blank."
             }
         } else {
-            ns_log Notice "cs_customer_reps_of_cat: cat_id '${cat_id}' not found. property_label is blank."
+            ns_log Notice "cs_contact_reps_of_cat: cat_id '${cat_id}' not found. property_label is blank."
         }
     } else {
-        ns_log Notice "cs_customer_reps_of_cat: category_id not found. category_id '${category_id} parent_id '${parent_id}' category label '${label}'"
+        ns_log Notice "cs_contact_reps_of_cat: category_id not found. category_id '${category_id} parent_id '${parent_id}' category label '${label}'"
     }
     # add user_ids from cs_cat_assignment_map
-    set cc_uids_list [db_list cs_customer_rep_cat_map_read {select user_id from cs_customer_rep_cat_map 
+    set cc_uids_list [db_list cs_contact_rep_cat_map_read {select user_id from cs_contact_rep_cat_map 
         where category_id=:category_id 
         and instance_id=:instance_id}]
     set assigned_uids_list [set_union $user_ids_list $cc_uids_list]
@@ -98,7 +98,7 @@ ad_proc -private cs_support_reps_of_cat {
     If there is an error, an empty list is returned.
 } {
     upvar 1 instance_id instance_id
-    # cs_customer_reps_of_cat and cs_support_reps_of_cat are separate, because
+    # cs_contact_reps_of_cat and cs_support_reps_of_cat are separate, because
     # this is a place where one or the other may be modified,
     # and modification becomes more difficult if these use a single call point.
     set user_ids_list [list ]
@@ -155,7 +155,7 @@ ad_proc -private cs_support_reps_of_cat {
 ad_proc -private cs_cat_cs_property_label {
     category_id
 } {
-    Returns property_label associated with a category for customer support reps, or empty string if not available.
+    Returns property_label associated with a category for contact support reps, or empty string if not available.
 } {
     upvar 1 instance_id instance_id
     set cs_property_label ""
@@ -170,7 +170,7 @@ ad_proc -private cs_cat_cs_property_label {
 ad_proc -private cs_cat_cc_property_label {
     category_id
 } {
-    Returns property_label associated with a category for customer reps.
+    Returns property_label associated with a category for contact reps.
 } {
     upvar 1 instance_id instance_id
     set cc_property_label ""
@@ -185,7 +185,7 @@ ad_proc -private cs_cat_cc_property_label {
 ad_proc -private cs_tickets_assigned_to {
     {user_id ""}
 } {
-    Lists ticket_ids for a customer support user_id as a list.
+    Lists ticket_ids for a contact support user_id as a list.
 } {
     upvar 1 instance_id instance_id
     # cs_tickets
@@ -198,29 +198,29 @@ ad_proc -private cs_tickets_assigned_to {
 ad_proc -private cs_tickets_subscribed_to {
     {user_id ""}
 } {
-    Lists ticket_ids for a customer rep user_id as a list.
+    Lists ticket_ids for a contact rep user_id as a list.
 } {
     upvar 1 instance_id instance_id
     # cs_tickets
-    set id_list [db_list cs_customer_rep_ticket_map {select ticket_id from cs_customer_rep_ticket_map
+    set id_list [db_list cs_contact_rep_ticket_map {select ticket_id from cs_contact_rep_ticket_map
         where user_id=:user_id
         and instance_id=:instance_id} ]
     return $id_list
 }
 
-ad_proc -private cs_est_customer_response_time {
-    customer_id
+ad_proc -private cs_est_contact_response_time {
+    contact_id
 } {
-    Returns anticipated customer response time (median), or empty string if not enough info.
+    Returns anticipated contact response time (median), or empty string if not enough info.
     Currently only calcuates response times based on tickets requesting responses regarding scheduled operations.
 } {
     upvar 1 instance_id instance_id
     # Maybe later make a proc that returns a cobbler list, fixed system time vs. historical probability
-    # aka cs_anticipated_customer_response_time
+    # aka cs_anticipated_contact_response_time
     set fr_s_list [db_list cs_ticket_stats_ecr {select cs_first_response_s from cs_ticket_stats
         where instance_id=:instance_id
         and ticket_id in (select ticket_id from cs_tickets
-                          where customer_id=:customer_id
+                          where contact_id=:contact_id
                           and ( scheduled_operation_p='1' or scheduled_maint_req_p='1' )
                           and instance_id=:instance_id ) } ]
     set ecr_time [cs_median_human_time $fr_s_list]

@@ -1,11 +1,11 @@
-#customer-service/tcl/cs-util-procs.tcl
+#contact-support/tcl/cs-util-procs.tcl
 ad_library {
 
-    misc API for customer-service
+    misc API for contact-support
     @creation-date 21 Jan 2017
     @Copyright (c) 2016 Benjamin Brink
     @license GNU General Public License 2
-    @project home: http://github.com/tekbasse/customer-service
+    @project home: http://github.com/tekbasse/contact-support
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
     
@@ -13,13 +13,13 @@ ad_library {
 
 # qc_properties  returns list of properties (defined in accounts-ledger)
 
-# customer-service.customer_id references refer to accounts-ledeger.contact_id
-# so that package can be used  with contacts, customers, or vendors.
+# contact-support.contact_id references refer to accounts-ledeger.contact_id
+# so that package can be used  with contacts, contacts, or vendors.
 
-ad_proc -private cs_customer_ids_of_user_id { 
+ad_proc -private cs_contact_ids_of_user_id { 
     {user_id ""}
 } {
-    Returns list of customer_id available to user_id in a customer's role position.
+    Returns list of contact_id available to user_id in a contact's role position.
 } {
     upvar 1 instance_id instance_id
     if { ![info exists instance_id] } {
@@ -32,30 +32,30 @@ ad_proc -private cs_customer_ids_of_user_id {
     set package_id [ad_conn package_id]
 
     #set cs_type qc_parameter_get $instance_id ""
-    set cs_type [parameter::get -parameter customerTypesRef -package_id $package_id]
+    set cs_type [parameter::get -parameter contactTypesRef -package_id $package_id]
 
-    # Change this SWITCH to whatever other package reference provides a list of customer_ids for user_id
+    # Change this SWITCH to whatever other package reference provides a list of contact_ids for user_id
     # Use accounts-ledger api for default, consider a package parameter for other cases
-    # qal_contact_ids_of_usr_id  (this handles for vendors, customers, as well as other cases)
-    set customer_id_list [list ]
+    # qal_contact_ids_of_usr_id  (this handles for vendors, contacts, as well as other cases)
+    set contact_id_list [list ]
     switch $cs_type -- {
         1 {
-            set customer_id_list [qal_customer_ids_of_user_id $user_id ]
+            set contact_id_list [qal_contact_ids_of_user_id $user_id ]
         }
         2 {
-            set customer_id_list [qal_vendor_ids_of_user_id $user_id ]
+            set contact_id_list [qal_vendor_ids_of_user_id $user_id ]
         }
         3 {
-            set customer_id1_list [qal_customer_ids_of_user_id $user_id ]
-            set customer_id2_list [qal_vendor_ids_of_user_id $user_id ]
-            set customer_id_list [set_union $customer_id1_list $customer_id2_list]
+            set contact_id1_list [qal_contact_ids_of_user_id $user_id ]
+            set contact_id2_list [qal_vendor_ids_of_user_id $user_id ]
+            set contact_id_list [set_union $contact_id1_list $contact_id2_list]
         } 
         4 {
             # all contacts user has access to
-            set customer_id_list [qal_contact_ids_of_user_id $user_id ]
+            set contact_id_list [qal_contact_ids_of_user_id $user_id ]
         }
    }
-    return $customer_id_list
+    return $contact_id_list
 }
 
 
@@ -172,9 +172,9 @@ ad_proc -private cs_category_create {
 } {
     Create a category entry. args are: parent_id order_value label name active_p cs_property_label cc_property_label description.
     <br/>
-    cs_property_label is the property label for customer support reps. default: non_assets
+    cs_property_label is the property label for contact support reps. default: non_assets
     <br/>
-    cc_property_label is the property label for customers. default: non_assets
+    cc_property_label is the property label for contacts. default: non_assets
 
 
     @return id if created. Otherwise returns empty string.
@@ -241,7 +241,7 @@ ad_proc -private cs_category_trash {
 ad_proc -private cs_support_reps_of_ticket { 
     ticket_id
 } {
-    Returns list of user_ids of customer support reps associated with ticket.
+    Returns list of user_ids of contact support reps associated with ticket.
 } {
     upvar 1 instance_id instance_id
     set uid_list [db_list cs_support_rep_ticket_map_r_uid {select user_id from cs_support_rep_ticket_map
@@ -250,13 +250,13 @@ ad_proc -private cs_support_reps_of_ticket {
     return $uid_list
 }
 
-ad_proc -private cs_customer_reps_of_ticket {
+ad_proc -private cs_contact_reps_of_ticket {
     ticket_id
 } {
-    Returns list of user_ids of customer reps associated with ticket.
+    Returns list of user_ids of contact reps associated with ticket.
 } {
     upvar 1 instance_id instance_id
-    set uid_list [db_list cs_customer_rep_ticket_map_r_uid {select user_id from cs_customer_rep_ticket_map
+    set uid_list [db_list cs_contact_rep_ticket_map_r_uid {select user_id from cs_contact_rep_ticket_map
         where instance_id=:instance_id
         and ticket_id=:ticket_id}]
     return $uid_list
@@ -268,7 +268,7 @@ ad_proc -private cs_customer_reps_of_ticket {
 ad_proc -private cs_ticket_action_log_cr {
     ticket_id
     cs_rep_ids
-    customer_user_ids
+    contact_user_ids
     op_type
 } {
     Logs a ticket action.
@@ -284,7 +284,7 @@ ad_proc -private cs_ticket_action_log_cr {
         set cs_rep_ids_list [qf_listify $cs_rep_ids]
 
         if { [hf_natural_number_list_validate $cs_rep_ids_list] } {
-            set cu_ids_list [qf_listify $customer_user_ids] 
+            set cu_ids_list [qf_listify $contact_user_ids] 
 
             if { [hf_natural_number_list_validate $cu_ids_list ] } {
 
@@ -302,12 +302,12 @@ ad_proc -private cs_ticket_action_log_cr {
     }
     if { $success_p } {
         db_dml cs_ticket_action_log_cr {insert into cs_ticket_action_log
-            (ticket_id,instance_id,cs_rep_ids,customer_user_ids,op_type,op_by,op_time)
-            values (:ticket_id,:instance_id,:cs_rep_ids,:customer_user_ids,:op_type,:user_id,now()) }
+            (ticket_id,instance_id,cs_rep_ids,contact_user_ids,op_type,op_by,op_time)
+            values (:ticket_id,:instance_id,:cs_rep_ids,:contact_user_ids,:op_type,:user_id,now()) }
     } else {
         ns_log Warning "cs_ticket_action_log_cr. Could not write action. \
     ticket_id '${ticket_id}' user_id '${user_id}' instance_id '${instance_id}' \
-    cs_rep_ids '${cs_rep_ids}' customer_user_ids '${customer_usr_ids}' op_type '${op_type}'"
+    cs_rep_ids '${cs_rep_ids}' contact_user_ids '${contact_usr_ids}' op_type '${op_type}'"
     }
     return $success_p
 }
@@ -332,9 +332,9 @@ ad_proc -private cs_median_human_time {
             set days [expr { $median / $day_s } ]
             set median [expr { $median - ( $days * $day_s ) } ]
             if { $days > 1 } {
-                append et_time " ${days} #customer-service.days#"
+                append et_time " ${days} #contact-support.days#"
             } else {
-                append et_time " ${days} #customer-service.day#"
+                append et_time " ${days} #contact-support.day#"
             }
         } else {
             set days 0
@@ -343,9 +343,9 @@ ad_proc -private cs_median_human_time {
             set hours [expr { $median / $hour_s } ]
             set median [expr { $median - ( $hours * $hour_s ) } ]
             if { $hours > 1 } {
-                append et_time " ${hours} #customer-service.hours#"
+                append et_time " ${hours} #contact-support.hours#"
             } else {
-                append et_time " ${hours} #customer-service.hour#"
+                append et_time " ${hours} #contact-support.hour#"
             }
         } else {
             set hours 0
@@ -359,9 +359,9 @@ ad_proc -private cs_median_human_time {
         incr minutes 1
         if { $minutes > 0 && $days == 0 } {
             if { $minutes < 2 } {
-                append et_time " ${minutes} #customer-service.minute#"
+                append et_time " ${minutes} #contact-support.minute#"
             } else {
-                append et_time " ${minutes} #customer-service.minutes#"
+                append et_time " ${minutes} #contact-support.minutes#"
             }
         }
     }

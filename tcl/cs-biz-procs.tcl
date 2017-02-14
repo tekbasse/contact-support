@@ -1,17 +1,17 @@
-#customer-service/tcl/cs-biz-procs.tcl
+#contact-support/tcl/cs-biz-procs.tcl
 ad_library {
 
-    business procs for customer-service
+    business procs for contact-support
     @creation-date 21 Jan 2017
     @Copyright (c) 2017 Benjamin Brink
     @license GNU General Public License 2
-    @project home: http://github.com/tekbasse/customer-service
+    @project home: http://github.com/tekbasse/contact-support
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
     
 }
 
-# customer-service.customer_id references refer to accounts-ledeger.contact_id
+# contact-support.contact_id references refer to accounts-ledeger.contact_id
 # so that package can be used  with contacts, customers, or vendors.
 
 ad_proc -public cs_ticket_create {
@@ -21,7 +21,7 @@ ad_proc -public cs_ticket_create {
     If ticket_ref_name is defined, assigns the variable name of ticket_ref_name to the ticket's external reference.
     <br/>
     args: 
-    customer_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority ann_type ann_message ann_message_type
+    contact_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority ann_type ann_message ann_message_type
     <br/>
     See c_tickets table definition for usage. ann_type, ann_message, and ann_message_type is from cs_announcements table: ann_type, message, message_type 
     <br/>
@@ -33,7 +33,7 @@ ad_proc -public cs_ticket_create {
     set p [list \
                ticket_id \
                ticket_ref_name \
-               customer_id \
+               contact_id \
                authenticated_by \
                ticket_category_id \
                current_tier_level \
@@ -89,19 +89,19 @@ ad_proc -public cs_ticket_create {
     }
 
     db_dml cs_tickets_cr {insert into cs_tickets
-        (ticket_id,instance_id,customer_id,authenticated_by,ticket_category_id,
+        (ticket_id,instance_id,contact_id,authenticated_by,ticket_category_id,
          current_tier_level,subject,cs_open_p,opened_by,cs_time_opened,
          user_open_p,user_time_opened,privacy_level,trashed_p,
          ignore_reopen_p,unscheduled_service_req_p,scheduled_operation_p,
          scheduled_maint_req_p,priority)
-        values (:ticket_id,:instance_id,:customer_id,:authenticated_by,:ticket_category_id,
+        values (:ticket_id,:instance_id,:contact_id,:authenticated_by,:ticket_category_id,
          :current_tier_level,:subject,:cs_open_p,:opened_by,:cs_time_opened,
          :user_open_p,:user_time_opened,:privacy_level,:trashed_p,
          :ignore_reopen_p,:unscheduled_service_req_p,:scheduled_operation_p,
          :scheduled_maint_req_p,:priority)
     }
 
-    cs_ticket_message_create ticket_id $ticket_id customer_id $customer_id privacy_level $privacy_level subject $subject message $message internal_notes $internal_notes internal_p $internal_p
+    cs_ticket_message_create ticket_id $ticket_id contact_id $contact_id privacy_level $privacy_level subject $subject message $message internal_notes $internal_notes internal_p $internal_p
 
     if { $scheduled_maint_req_p && $scheduled_operations_p && $ann_type ne "" } {
 
@@ -116,7 +116,7 @@ ad_proc -public cs_ticket_create {
         # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
 
         # create cs_sched_messages record
-        #  timing of alert customers according to parameter SchedRemindersList
+        #  timing of alert contacts according to parameter SchedRemindersList
         # using cs_sched_messages_create
         # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link 
         ##code        
@@ -130,7 +130,7 @@ ad_proc -private cs_ticket_message_create {
 } {
     Create a message for a ticket_id
     <br/>
-    args: customer_id ticket_id ticket_ref privacy_level message internal_notes internal_p
+    args: contact_id ticket_id ticket_ref privacy_level message internal_notes internal_p
     <br/>
     required args: ticket_id (message or internal_notes)
 } {
@@ -154,7 +154,7 @@ ad_proc -private cs_ticket_message_create {
         # Operation is just now scheduled. Trigger:
         #  set notifications 
         #  and possibly cs_announcements
-        #  timing of alert customers according to parameter SchedRemindersList
+        #  timing of alert contacts according to parameter SchedRemindersList
     }
 
 }
@@ -162,16 +162,16 @@ ad_proc -private cs_ticket_message_create {
 ad_proc -public cs_announce {
     announcement_text
     ann_type
-    {customer_id_list ""}
+    {contact_id_list ""}
     {expiration ""}
     {ticket_id ""}
     {allow_html_p "0"}
 } {
-    Show announcment to customers who visit customer-service package. 
+    Show announcment to contacts who visit contact-support package. 
     Expires when ticket_id expires or expiration, and/or manual expiration.
     If allow_html_p is one, allows html to be in announcement_text
     <br/>
-    If customer_id_list is not empty, announcement only applies to customers referenced in customer_id_list.
+    If contact_id_list is not empty, announcement only applies to contacts referenced in contact_id_list.
     <br/>
     Expiration can be relative tcl "now + 3 days, now + 3 hours, now + 15 minutes or yyyy-mm-dd hh:mm:ss"
 
@@ -185,7 +185,7 @@ ad_proc -public cs_announce {
         set success_p 0
     } else {
         set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
-        set contact_id [qal_contact_id_from_customer_id $customer_id]
+        set contact_id [qal_contact_id_from_contact_id $contact_id]
         set tz [qal_contact_id_read $contact_id timezone user_id]
         if { $tz eq "" && [qf_is_natural_number $user_id] } {
             set tz [lang::user::timezone $user_id]
@@ -197,8 +197,8 @@ ad_proc -public cs_announce {
     
     }
 
-    # cs_announce (cs rep to multple customers) 
-    # Send announcement / notifiy to subset of customers by customer_ref, ticket_id is the one
+    # cs_announce (cs rep to multple contacts) 
+    # Send announcement / notifiy to subset of contacts by contact_ref, ticket_id is the one
     # that is related to announcement. When ticket_id closes, announcement closes.
 
     ##code
@@ -209,7 +209,7 @@ ad_proc -public cs_announce {
 ad_proc -private cs_sched_messages_create {
     args
 } {
-    Create alerts for customer.
+    Create alerts for contact.
 } {
     ##code
 
@@ -218,7 +218,7 @@ ad_proc -private cs_sched_messages_create {
 ad_proc -public cs_ticket_open {
     args
 } {
-    Open a customer-service ticket.
+    Open a contact-support ticket.
 
     @return ticket_id, or empty string if fails.
 } {
@@ -230,10 +230,10 @@ ad_proc -public cs_ticket_open {
 }
 
 
-ad_proc -public cs_ticket_close_by_customer {
+ad_proc -public cs_ticket_close_by_contact {
     args
 } {
-    Close ticket by customer rep.
+    Close ticket by contact rep.
 } {
     upvar 1 instance_id instance_id
     set success_p 1
@@ -245,7 +245,7 @@ ad_proc -public cs_ticket_close_by_customer {
 ad_proc -public cs_ticket_close_by_rep {
     args
 } {
-    Close ticket by customer support.
+    Close ticket by contact support.
 } {
     upvar 1 instance_id instance_id
     set success_p 1
@@ -309,14 +309,14 @@ ad_proc -private cs_categories {
 
 
 
-ad_proc -private cs_notify_customer_reps {
+ad_proc -private cs_notify_contact_reps {
     ticket_id
     {subject ""}
     {message ""}
     {immediate_p "1"}
     {message_id ""}
 } {
-    Notify customer reps that subscribe to ticket.
+    Notify contact reps that subscribe to ticket.
 } {
     # based on hf_monitor_alert_trigger (code extracted below)
     # sender email is systemowner
@@ -326,7 +326,7 @@ ad_proc -private cs_notify_customer_reps {
     set sysowner_user_id [party::get_by_email -email $sysowner_email]
 
     # What users to send alert to?
-    set users_list [cs_customer_reps_of_ticket $ticket_id]
+    set users_list [cs_contact_reps_of_ticket $ticket_id]
     if { [llength $users_list] > 0 } {
         # get TO emails from user_id
         set email_addrs_list [list ]
@@ -336,13 +336,13 @@ ad_proc -private cs_notify_customer_reps {
         
         # What else is needed to send alert message?
         set ticket_ref [cs_t_ref_from_id $ticket_id]
-        set subject "#customer-service.ticket# #customer-service.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
+        set subject "#contact-support.ticket# #contact-support.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
         set body $alert_message
         # post to logged in user pages 
-        hf_log_create $asset_id "#customer-service.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
+        hf_log_create $asset_id "#contact-support.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
 
         # send email message
-        append body "#customer-service.Alerts_can_be_customized#. #customer-service.See_asset_configuration_for_details#."
+        append body "#contact-support.Alerts_can_be_customized#. #contact-support.See_asset_configuration_for_details#."
         acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
 
         # log/update alert status
@@ -351,7 +351,7 @@ ad_proc -private cs_notify_customer_reps {
             
         } else {
             # show email has been scheduled for sending.
-            ns_log Notice "cs_notify_customer_reps. ticket_id '${ticket_id}' message_id '${message_id}'"
+            ns_log Notice "cs_notify_contact_reps. ticket_id '${ticket_id}' message_id '${message_id}'"
         }
     }
     return 1
@@ -385,13 +385,13 @@ ad_proc -private cs_notify_support_reps {
         
         # What else is needed to send alert message?
         set ticket_ref [cs_t_ref_from_id $ticket_id]
-        set subject "#customer-service.ticket# #customer-service.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
+        set subject "#contact-support.ticket# #contact-support.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
         set body $alert_message
         # post to logged in user pages 
-        hf_log_create $asset_id "#customer-service.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
+        hf_log_create $asset_id "#contact-support.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
 
         # send email message
-        append body "#customer-service.Alerts_can_be_customized#. #customer-service.See_asset_configuration_for_details#."
+        append body "#contact-support.Alerts_can_be_customized#. #contact-support.See_asset_configuration_for_details#."
         acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
 
         # log/update alert status
