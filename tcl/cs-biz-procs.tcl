@@ -245,7 +245,7 @@ ad_proc -public cs_ticket_close_by_contact {
 ad_proc -public cs_ticket_close_by_rep {
     args
 } {
-    Close ticket by contact support.
+    Close ticket by support rep.
 } {
     upvar 1 instance_id instance_id
     set success_p 1
