@@ -40,15 +40,21 @@ ad_proc -private cs_contact_ids_of_user_id {
     set contact_id_list [list ]
     switch $cs_type -- {
         1 {
-            set contact_id_list [qal_contact_ids_of_user_id $user_id ]
+            set customer_id_list [qal_customer_ids_of_user_id $user_id ]
+            set contact_id_list [qal_contact_id_of_customer_id $customer_id_list]
         }
         2 {
-            set contact_id_list [qal_vendor_ids_of_user_id $user_id ]
+            set vendor_id_list [qal_vendor_ids_of_user_id $user_id ]
+            set contact_id_list [qal_contact_id_of_vendor_id $vendor_id_list]
         }
         3 {
-            set contact_id1_list [qal_contact_ids_of_user_id $user_id ]
-            set contact_id2_list [qal_vendor_ids_of_user_id $user_id ]
-            set contact_id_list [set_union $contact_id1_list $contact_id2_list]
+            set customer_id_list [qal_customer_ids_of_user_id $user_id ]
+            set c_contact_id_list [qal_contact_id_of_customer_id $customer_id_list]
+
+            set vendor_id_list [qal_vendor_ids_of_user_id $user_id ]
+            set v_contact_id_list [qal_contact_id_of_vendor_id $vendor_id_list]
+
+            set contact_id_list [set_union $c_contact_id_list $v_contact_id_list]
         } 
         4 {
             # all contacts user has access to
@@ -172,9 +178,9 @@ ad_proc -private cs_category_create {
 } {
     Create a category entry. args are: parent_id order_value label name active_p cs_property_label cc_property_label description.
     <br/>
-    cs_property_label is the property label for contact support reps. default: non_assets
+    cs_property_label is the property label for support reps. default: non_assets
     <br/>
-    cc_property_label is the property label for contacts. default: non_assets
+    cc_property_label is the property label for contact reps. default: non_assets
 
 
     @return id if created. Otherwise returns empty string.
@@ -241,7 +247,7 @@ ad_proc -private cs_category_trash {
 ad_proc -private cs_support_reps_of_ticket { 
     ticket_id
 } {
-    Returns list of user_ids of contact support reps associated with ticket.
+    Returns list of user_ids of support reps associated with ticket.
 } {
     upvar 1 instance_id instance_id
     set uid_list [db_list cs_support_rep_ticket_map_r_uid {select user_id from cs_support_rep_ticket_map
