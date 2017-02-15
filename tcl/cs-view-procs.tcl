@@ -155,7 +155,7 @@ ad_proc -private cs_support_reps_of_cat {
 ad_proc -private cs_cat_cs_property_label {
     category_id
 } {
-    Returns property_label associated with a category for contact support reps, or empty string if not available.
+    Returns property_label associated with a category for support reps, or empty string if not available.
 } {
     upvar 1 instance_id instance_id
     set cs_property_label ""
@@ -185,7 +185,7 @@ ad_proc -private cs_cat_cc_property_label {
 ad_proc -private cs_tickets_assigned_to {
     {user_id ""}
 } {
-    Lists ticket_ids for a contact support user_id as a list.
+    Lists ticket_ids for a support rep of user_id as a list.
 } {
     upvar 1 instance_id instance_id
     # cs_tickets
