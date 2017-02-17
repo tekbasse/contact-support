@@ -107,18 +107,10 @@ ad_proc -public cs_ticket_create {
 
         # Operation has been scheduled with ticket creation.
         # set any annoucements associated with schedule
-        # in cs_ticket_op_periods
-        # using cs_announce
         if { $ann_message eq "" } {
             set ann_message $message
         }
         cs_announce 
-        # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
-
-        # create cs_sched_messages record
-        #  timing of alert contacts according to parameter SchedRemindersList
-        # using cs_sched_messages_create
-        # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link 
         ##code        
 
     }
@@ -196,6 +188,17 @@ ad_proc -public cs_announce {
         }
     
     }
+
+        # in cs_ticket_op_periods
+        # using cs_announce
+
+        # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
+
+        # create cs_sched_messages record
+        #  timing of alert contacts according to parameter SchedRemindersList
+        # using cs_sched_messages_create
+        # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link
+
 
     # cs_announce (cs rep to multple contacts) 
     # Send announcement / notifiy to subset of contacts by contact_ref, ticket_id is the one
