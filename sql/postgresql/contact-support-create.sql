@@ -55,6 +55,18 @@ create index cs_announcements_expire_ts_idx on cs_announcements (expire_timestam
 create index cs_announcements_expired_p_idx on cs_announcements (expired_p);
 create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
 
+CREATE TABLE cs_ann_user_map (
+       instance_id        integer,
+       -- announcement_id
+       ann_id             integer,
+       user_id            integer,
+       -- on expire, notify user that event is over.
+       notify_p integer
+);
+create index cs_ann_user_map_instance_id_idx on cs_ann_user_map (instance_id);
+create index cs_ann_user_map_user_id_idx on cs_ann_user_map (user_id);
+create index cs_ann_user_map_notify_p_idx on cs_ann_user_map (notify_p);
+
  -- terminology:   SST = support ticket state (open/closed)
  --                CST = contact ticket state (open/closed)
  -- When contact opens ticket, both CST and SST are opened for triage.
