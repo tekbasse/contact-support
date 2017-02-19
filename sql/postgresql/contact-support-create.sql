@@ -392,8 +392,15 @@ CREATE TABLE cs_ticket_op_periods (
        -- estimated, as in appointment time
        -- Between this period and when (op_done_p is 0 and/or ticket_id is open), 
        -- a message is shown to contact reps of cs_tickets.contact_id
-       start_ts     timestamptz,
-       end_ts       timestamptz,
+       start_ts       timestamptz,
+       end_ts         timestamptz,
+       -- If support asks contact to make appointment.
+       -- Support sets duration_*
+       -- duration_name is text name of length of time to set aside in schedule
+       duration_name  varchar(100),
+       -- for calculating end_ts
+       -- duration_name represented in seconds
+       duration_s     integer,
        -- answers question:
        -- Is operation complete for this period?
        -- This closes if time is after end_time
