@@ -106,11 +106,11 @@ ad_proc -public cs_ticket_create {
     if { $scheduled_maint_req_p && $scheduled_operations_p && $ann_type ne "" } {
 
         # Operation has been scheduled with ticket creation.
-        # set any annoucements associated with schedule
+        # set any annoucements (and advanced notices ie scheduled messages) associated with scheduled event
         if { $ann_message eq "" } {
             set ann_message $message
         }
-        cs_announce 
+        cs_announcement 
         ##code        
 
     }
@@ -151,34 +151,57 @@ ad_proc -private cs_ticket_message_create {
 
 }
 
-ad_proc -public cs_announce {
+ad_proc -public cs_announcement {
     announcement_text
     ann_type
     {contact_id_list ""}
+    {begins "now"}
     {expiration ""}
     {ticket_id ""}
     {allow_html_p "0"}
 } {
     Show announcment to contacts who visit contact-support package. 
-    Expires when ticket_id expires or expiration, and/or manual expiration.
+    Event begins at "begins" time stamp. If empty, defaults to "now".
+    Event expires when ticket_id expires or expiration, and/or manual expiration.
     If allow_html_p is one, allows html to be in announcement_text
     <br/>
     If contact_id_list is not empty, announcement only applies to contacts referenced in contact_id_list.
     <br/>
-    Expiration can be relative tcl "now + 3 days, now + 3 hours, now + 15 minutes or yyyy-mm-dd hh:mm:ss"
+    Values of <code>begins</code> and <code>expiration</code> can be relative tcl "now + 3 days, now + 3 hours, now + 15 minutes or yyyy-mm-dd hh:mm:ss"
 
     @return 1 if no errors, otherwise returns 0.
 } {
     set success_p 1
     # relatives okay with: clock format \[clock scan "now + 3 days"\]
     # relative vocabulary includes year, month, week, day, hours, today, now 
+    if { $begins eq "" } {
+        set begins "now"
+    }
+    if { [catch {set begins_ts [clock scan $begins] } result] } {
+        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
+        set success_p 0
+    } else {
+
+##code see qal_timestamp_to_contact_tz in accounts-ledger/tcl/qal-utils-procs.tcl
+## This seems awkward.. make two separate functions tz_to_any_tz, and get_contact_id_tz...
+        set begins_yyyymmdd_hhmmss_utc [clock format $begins_ts -gmt true]
+        set tz [qal_contact_id_read $contact_id [list timezone user_id]]
+        if { $tz eq "" && [qf_is_natural_number $user_id] } {
+            set tz [lang::user::timezone $user_id]
+        }
+        if { $tz eq "" } {
+            set tz [lang::system::timezone]
+            set begins_ltz [lc_time_utc_to_local_ $begins_yyyymmdd_hhmmss_utc $tz]
+        }
+    }
+
+
     if { [catch {set expires_ts [clock scan $expiration] } result] } {
-        ns_log Notice "cs_announce: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
+        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
         set success_p 0
     } else {
         set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
-        set contact_id [qal_contact_id_from_contact_id $contact_id]
-        set tz [qal_contact_id_read $contact_id timezone user_id]
+        set tz [qal_contact_id_read $contact_id [list timezone user_id]]
         if { $tz eq "" && [qf_is_natural_number $user_id] } {
             set tz [lang::user::timezone $user_id]
         }
@@ -186,11 +209,11 @@ ad_proc -public cs_announce {
             set tz [lang::system::timezone]
             set expires_ltz [lc_time_utc_to_local_ $expires_yyyymmdd_hhmmss_utc $tz]
         }
-    
     }
-
+    
+    
         # in cs_ticket_op_periods
-        # using cs_announce
+        # using cs_announcement
 
         # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
 
@@ -200,7 +223,7 @@ ad_proc -public cs_announce {
         # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link
 
 
-    # cs_announce (cs rep to multple contacts) 
+    # cs_announcement (cs rep to multple contacts) 
     # Send announcement / notifiy to subset of contacts by contact_ref, ticket_id is the one
     # that is related to announcement. When ticket_id closes, announcement closes.
 
