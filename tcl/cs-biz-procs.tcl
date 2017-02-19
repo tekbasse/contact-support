@@ -172,6 +172,8 @@ ad_proc -public cs_announcement {
     @return 1 if no errors, otherwise returns 0.
 } {
     set success_p [hf_list_filter_by_natural_number $contact_id_list]
+    set contact_id_list_len [llength $contact_id_list]
+    set package_id [ad_conn package_id]    
     if { $begins eq "" } {
         set begins "now"
     }
@@ -185,7 +187,7 @@ ad_proc -public cs_announcement {
         }
         set success_p 0
     } else {
-        set begins_yyyymmdd_hhmmss_utc [clock format $begins_ts -gmt true]
+        set begins_timestamp_utc [clock format $begins_ts -gmt true]
 
     }
 
@@ -211,28 +213,85 @@ ad_proc -public cs_announcement {
         }
         set success_p 0
     } else {
-        set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
+        set expires_timestamp_utc [clock format $expires_ts -gmt true]
+    }
+
+    
+    if { [qf_is_natural_number $ticket_id ] } {
+        if { $contact_id_list_len == 1  } {
+            # automatically convert any "ticket_ref" in announcement into a (linked) reference 
+            set ticket_ref [cs_t_ref_of_id $ticket_id]
+            if { $ticket_ref ne "" } {
+                if { $allow_html_p } {
+                    set ticket_ref [cs_ticket_url_of_t_ref $ticket_ref link]
+                }
+                regsub -all -- {ticket_ref} $announcement_text $ticket_ref announcement_text
+                set op_done_p 0
+                # record in cs_ticket_op_periods
+                db_dml cs_ticket_op_periods_cr {
+                    insert into cs_ticket_op_periods 
+                    (instance_id,ticket_id,start_ts,end_ts,op_done_p)
+                    values (:instance_id,:ticket_id,:begins_timestamp_utc,:expires_timestamp_utc)
+                }
+                set ticket_list [cs_ticket_read $ticket_id]
+                qf_nv_list_to_vars $ticket_list contact_id
+                set ticket_contact_id $contact_id
+            }
+        } else {
+            # don't share a ticket_ref with other contacts_ids
+            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} ticket_id '${ticket_id}' ticket_ref withheld. Should not be shared with external contact_id(s)."
+            regsub -all -- {ticket_ref} $announcement_text "#contact-support.ticket_ref_confidential#" announcement_text
+            
+        }
+    } elseif { $ticket_id ne "" } {
+        ns_log Warning "cs_announcement: instance_id '${instance_id}' user_id '${user_id} ticket_id '${ticket_id}' not valid"
     }
 
     # relatives okay with: clock format \[clock scan "now + 3 days"\]
     # relative vocabulary includes year, month, week, day, hours, today, now 
-    if { $announcement_text ne "" && $success_p } {
-        set contact_id_list_len [llength $contact_id_list]
-        
-        while { $success_p && $i < $contact_id_list_len } {
-            set contact_id [lindex $contact_id_list $i]
-            set tz [qal_contact_tz $contact_id]
-            set begins_ltz [lc_time_utc_to_local $begins_yyyymmdd_hhmmss_utc $tz]    
-            set expires_ltz [lc_time_utc_to_local $expires_yyyymmdd_hhmmss_utc $tz]
-        # in cs_ticket_op_periods
+    set i 0
+    while { $success_p && $i < $contact_id_list_len } {
+        set contact_id [lindex $contact_id_list $i]
+        set tz [qal_contact_tz $contact_id]
+        set begins_ltz [lc_time_utc_to_local $begins_timestamp_utc $tz]    
+        set expires_ltz [lc_time_utc_to_local $expires_timestamp_utc $tz]
         # using cs_announcement
+        set now_ts [clock seconds]
+        if { $contact_id eq $ticket_contact_id } {
+            # create cs_sched_messages record
+            #  timing of alert contacts according to parameter schedRemindersList
+            # using cs_sched_messages_create
 
-        # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
-
-        # create cs_sched_messages record
-        #  timing of alert contacts according to parameter schedRemindersList
-        # using cs_sched_messages_create
-        # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link
+            set package_id [ad_conn package_id]
+            set sched_reminder [parameter::get -parameter schedRemindersList -package_id $package_id]
+            set sched_reminder_list [split $sched_reminder ","]
+            set triggered_p 0
+            if { $allow_html_p } {
+                set message_type "html"
+            } else {
+                set message_type "text"
+            }
+            foreach sr_ts $sched_reminder_list {
+                set trigger $begins
+                append trigger " - " $sr_ts
+                if { [catch {set trigger_ts [clock scan $trigger] } result] } {
+                    ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} trigger '${trigger}' Error '${result}'"
+                    if { [ns_conn isconnected] } {
+                        set err_message $trigger
+                        append err_message " " $result
+                        util_user_message -message $err_message
+                    }
+                    set success_p 0
+                } else {
+                    set trigger_timestamp_utc [clock format $trigger_ts -gmt true]
+                }
+                
+                db_dml { insert into cs_sched_messages
+                    (instance_id,ticket_id,trigger_ts,triggered_p,message,privacy_level,message_type)
+                    values (:instance_id,:ticket_id,:trigger_ts,:triggered_p,:message,:privacy_level,:message_type)
+                }
+            }
+            
             incr i
         }
     }

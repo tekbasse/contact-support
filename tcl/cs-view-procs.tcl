@@ -262,3 +262,55 @@ ad_proc -private cs_stats_ticket_close {
     set etr_time [cs_median_human_time $fr_s_list $pretty_p]
     return $etr_time
 }
+
+   
+ad_proc -private cs_ticket_read {
+    ticket_id
+} {
+    Reads a record from cs_tickets. Returns a name value list.
+} {
+    upvar 1 instance_id instance_id
+
+    set v_list_of_lists [db_list_of_lists cs_tickets_r1 { select ticket_id,instance_id,contact_id,
+        authenticated_by,ticket_category_id,current_tier_level,subject,
+        cs_open_p,opened_by,cs_time_opened,cs_time_closed,cs_closed_by,
+        user_open_p,user_time_opened,user_time_closed,user_closed_by,
+        privacy_level,trashed_p,ignore_reopen_p,unscheduled_service_req_p,
+        scheduled_maint_req_p,priority
+        from cs_tickets
+        where instance_id=:instance_id
+        and ticket_id=:ticket_id}]
+    set nv_list [list ]    
+    if { $v_list_of_lists ne $nv_list } {
+        set keys [list ticket_id \
+                      instance_id \
+                      contact_id \
+                      authenticated_by \
+                      ticket_category_id \
+                      current_tier_level \
+                      subject \
+                      cs_open_p \
+                      opened_by \
+                      cs_time_opened \
+                      cs_time_closed \
+                      cs_closed_by \
+                      user_open_p \
+                      user_time_opened \
+                      user_time_closed \
+                      user_closed_by \
+                      privacy_level \
+                      trashed_p \
+                      ignore_reopen_p \
+                      unscheduled_service_req_p \
+                      scheduled_maint_req_p \
+                      priority]
+        
+        set v_list [lindex $v_lists_of_lists 0]
+        set i 0
+        foreach key $keys {
+            lappend nv_list $key [lindex $v_list $i]
+            incr i
+        }
+    }
+    return $nv_list
+}
