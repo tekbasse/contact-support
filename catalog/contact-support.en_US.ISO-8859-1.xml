@@ -10,8 +10,10 @@
 <msg key="closed">closed</msg>
 <msg key="new_ticket">new_ticket</msg>
 <msg key="open">open</msg>
+<msg key="notice">Notice</msg>
 <msg key="subscribe">subscribe</msg>
 <msg key="ticket">ticket</msg>
+<msg key="ticket_ref_confidential">(Ticket reference withheld.)</msg>
 <msg key="tickets">tickets</msg>
 <msg key="unassign">unassign</msg>
 <msg key="unsubscribe">unsubscribe</msg>
