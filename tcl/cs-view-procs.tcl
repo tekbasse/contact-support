@@ -210,9 +210,11 @@ ad_proc -private cs_tickets_subscribed_to {
 
 ad_proc -private cs_est_contact_response_time {
     contact_id
+    {pretty_p "1"}
 } {
-    Returns anticipated contact response time (median), or empty string if not enough info.
+    Returns anticipated contact response time (median) in human readable format, or empty string if not enough info.
     Currently only calcuates response times based on tickets requesting responses regarding scheduled operations.
+    If pretty_p is 0, the response time is return in integer seconds units.
 } {
     upvar 1 instance_id instance_id
     # Maybe later make a proc that returns a cobbler list, fixed system time vs. historical probability
@@ -223,7 +225,8 @@ ad_proc -private cs_est_contact_response_time {
                           where contact_id=:contact_id
                           and ( scheduled_operation_p='1' or scheduled_maint_req_p='1' )
                           and instance_id=:instance_id ) } ]
-    set ecr_time [cs_median_human_time $fr_s_list]
+    set ecr_time [cs_median_human_time $fr_s_list $pretty_p]
+
     return $ecr_time
 }
 
@@ -231,27 +234,31 @@ ad_proc -private cs_est_contact_response_time {
 # also maybe in cron monitoring procs, which is why these are procs:
 
 ad_proc -private cs_stats_ticket_response {
+    {pretty_p "1"}
 } {
     Returns estimated time for ticket response from support (for nonscheduled events).
+    If pretty_p is "0", value is returned in integer seconds.
 } {
     upvar 1 instance_id instance_id
     # cs_stats_til_ticket_response (only for nonscheduled events)
     # esr = estimated support response time
     set fr_s_list [db_list cs_ticket_stats_esr {select cs_first_response_s from cs_ticket_stats
         where instance_id=:instance_id } ]
-    set esr_time [cs_median_human_time $fr_s_list]
+    set esr_time [cs_median_human_time $fr_s_list $pretty_p]
     return $esr_time
 }
 
 ad_proc -private cs_stats_ticket_close {
+    {pretty_p "1"}
 } {
     Returns estimated time for ticket resolution (for nonscheduled events).
+    If pretty_p is "0", returns value in integer seconds.
 } {
     upvar 1 instance_id instance_id
     # cs_stats_til_ticket_close (only for nonscheduled_events)
     # etr = estimated time until resolution
     set fr_s_list [db_list cs_ticket_stats_etr {select cs_final_response_s from cs_ticket_stats
         where instance_id=:instance_id } ]
-    set etr_time [cs_median_human_time $fr_s_list]
+    set etr_time [cs_median_human_time $fr_s_list $pretty_p]
     return $etr_time
 }

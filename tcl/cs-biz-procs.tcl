@@ -171,32 +171,59 @@ ad_proc -public cs_announcement {
 
     @return 1 if no errors, otherwise returns 0.
 } {
-    set success_p 1
+    set success_p [hf_list_filter_by_natural_number $contact_id_list]
+    if { $begins eq "" } {
+        set begins "now"
+    }
+    if { [catch {set begins_ts [clock scan $begins] } result] } {
+        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} begins '${begins}' Error '${result}'"
+        if { [ns_conn isconnected] } {
+            set err_message $begins 
+            append err_message " " $result
+            util_user_message -message $err_message
+            set allow_html_p 0
+        }
+        set success_p 0
+    } else {
+        set begins_yyyymmdd_hhmmss_utc [clock format $begins_ts -gmt true]
+
+    }
+    if { $expiration eq "" && $success_p } {
+        # set expiration 10* the average time to ticket resolution, or default to 365/4=91 days later
+        set expiration_dur [cs_stats_ticket_close 0]
+        set expiration $begins
+        if { $expiration_dur eq "" } {
+            ##code make 91 days a parameter
+            append expiration " + 91 days"
+        } else {
+            ##code make 10 a parameter
+            set expiration_dur [expr { $expiration_dur * 10 } ]
+            append expiration " + ${expiration_dur} seconds"
+        }
+    }
+    if { [catch {set expires_ts [clock scan $expiration] } result] } {
+        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
+        if { [ns_conn isconnected] } {
+            set err_message $expiration 
+            append err_message " " $result
+            util_user_message -message $err_message
+            set allow_html_p 0
+        }
+        set success_p 0
+    } else {
+        set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
+    }
+
     # relatives okay with: clock format \[clock scan "now + 3 days"\]
     # relative vocabulary includes year, month, week, day, hours, today, now 
-    while { $success_p && $i < $contact_id_list_len } {
-    foreach contact_id $contact_id_list {
-        set tz [qal_contact_tz $contact_id]
-        if { $begins eq "" } {
-            set begins "now"
-        }
-        if { [catch {set begins_ts [clock scan $begins] } result] } {
-            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
-            set success_p 0
-        } else {
-            set begins_yyyymmdd_hhmmss_utc [clock format $begins_ts -gmt true]
-            set begins_ltz [lc_time_utc_to_local $begins_yyyymmdd_hhmmss_utc $tz]
-        }
+    if { $announcement_text ne "" && $success_p } {
+        set contact_id_list_len [llength $contact_id_list]
         
-        if { [catch {set expires_ts [clock scan $expiration] } result] } {
-            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
-            set success_p 0
-        } else {
-            set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
+        while { $success_p && $i < $contact_id_list_len } {
+            set contact_id [lindex $contact_id_list $i]
+            set tz [qal_contact_tz $contact_id]
+            set begins_ltz [lc_time_utc_to_local $begins_yyyymmdd_hhmmss_utc $tz]    
             set expires_ltz [lc_time_utc_to_local $expires_yyyymmdd_hhmmss_utc $tz]
-        }
-    
-    
         # in cs_ticket_op_periods
         # using cs_announcement
 
@@ -206,7 +233,8 @@ ad_proc -public cs_announcement {
         #  timing of alert contacts according to parameter SchedRemindersList
         # using cs_sched_messages_create
         # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link
-
+            incr i
+        }
     }
     # cs_announcement (cs rep to multple contacts) 
     # Send announcement / notifiy to subset of contacts by contact_ref, ticket_id is the one

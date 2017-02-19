@@ -320,6 +320,7 @@ ad_proc -private cs_ticket_action_log_cr {
 
 ad_proc -private cs_median_human_time {
     seconds_list
+    {pretty_p "1"}
 } {
     Converts a list of integer seconds into a median value in common time units of days, hours, minutes.
     Only the most significant two units are returned.
@@ -331,44 +332,48 @@ ad_proc -private cs_median_human_time {
         set seconds_sorted_list [lsort -integer $seconds_list]
         set median_idx [expr { $seconds_count / 2} ]
         set median [lindex $seconds_sorted_list $median_idx]
-        set day_s 86400
-        set hour_s 3600
-        set minute_s 60
-        if { $median > $day_s } {
-            set days [expr { $median / $day_s } ]
-            set median [expr { $median - ( $days * $day_s ) } ]
-            if { $days > 1 } {
-                append et_time " ${days} #contact-support.days#"
+        if { [qf_is_true $pretty_p] } {
+            set day_s 86400
+            set hour_s 3600
+            set minute_s 60
+            if { $median > $day_s } {
+                set days [expr { $median / $day_s } ]
+                set median [expr { $median - ( $days * $day_s ) } ]
+                if { $days > 1 } {
+                    append et_time " ${days} #contact-support.days#"
+                } else {
+                    append et_time " ${days} #contact-support.day#"
+                }
             } else {
-                append et_time " ${days} #contact-support.day#"
+                set days 0
+            }
+            if { $median > $hour_s } {
+                set hours [expr { $median / $hour_s } ]
+                set median [expr { $median - ( $hours * $hour_s ) } ]
+                if { $hours > 1 } {
+                    append et_time " ${hours} #contact-support.hours#"
+                } else {
+                    append et_time " ${hours} #contact-support.hour#"
+                }
+            } else {
+                set hours 0
+            }
+            if { $median > $minute_s } {
+                set minutes [expr { $median / $minute_s } ]
+                set median [expr { $median - ( $minutes * $minute_s ) } ]
+            } else {
+                set minutes 0
+            }
+            incr minutes 1
+            if { $minutes > 0 && $days == 0 } {
+                if { $minutes < 2 } {
+                    append et_time " ${minutes} #contact-support.minute#"
+                } else {
+                    append et_time " ${minutes} #contact-support.minutes#"
+                }
             }
         } else {
-            set days 0
-        }
-        if { $median > $hour_s } {
-            set hours [expr { $median / $hour_s } ]
-            set median [expr { $median - ( $hours * $hour_s ) } ]
-            if { $hours > 1 } {
-                append et_time " ${hours} #contact-support.hours#"
-            } else {
-                append et_time " ${hours} #contact-support.hour#"
-            }
-        } else {
-            set hours 0
-        }
-        if { $median > $minute_s } {
-            set minutes [expr { $median / $minute_s } ]
-            set median [expr { $median - ( $minutes * $minute_s ) } ]
-        } else {
-            set minutes 0
-        }
-        incr minutes 1
-        if { $minutes > 0 && $days == 0 } {
-            if { $minutes < 2 } {
-                append et_time " ${minutes} #contact-support.minute#"
-            } else {
-                append et_time " ${minutes} #contact-support.minutes#"
-            }
+            set et_time $median
         }
     }
     return $et_time
