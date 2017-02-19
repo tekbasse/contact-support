@@ -174,42 +174,27 @@ ad_proc -public cs_announcement {
     set success_p 1
     # relatives okay with: clock format \[clock scan "now + 3 days"\]
     # relative vocabulary includes year, month, week, day, hours, today, now 
-    if { $begins eq "" } {
-        set begins "now"
-    }
-    if { [catch {set begins_ts [clock scan $begins] } result] } {
-        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
-        set success_p 0
-    } else {
-
-##code see qal_timestamp_to_contact_tz in accounts-ledger/tcl/qal-utils-procs.tcl
-## This seems awkward.. make two separate functions tz_to_any_tz, and get_contact_id_tz...
-        set begins_yyyymmdd_hhmmss_utc [clock format $begins_ts -gmt true]
-        set tz [qal_contact_id_read $contact_id [list timezone user_id]]
-        if { $tz eq "" && [qf_is_natural_number $user_id] } {
-            set tz [lang::user::timezone $user_id]
+    while { $success_p && $i < $contact_id_list_len } {
+    foreach contact_id $contact_id_list {
+        set tz [qal_contact_tz $contact_id]
+        if { $begins eq "" } {
+            set begins "now"
         }
-        if { $tz eq "" } {
-            set tz [lang::system::timezone]
-            set begins_ltz [lc_time_utc_to_local_ $begins_yyyymmdd_hhmmss_utc $tz]
+        if { [catch {set begins_ts [clock scan $begins] } result] } {
+            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
+            set success_p 0
+        } else {
+            set begins_yyyymmdd_hhmmss_utc [clock format $begins_ts -gmt true]
+            set begins_ltz [lc_time_utc_to_local $begins_yyyymmdd_hhmmss_utc $tz]
         }
-    }
-
-
-    if { [catch {set expires_ts [clock scan $expiration] } result] } {
-        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
-        set success_p 0
-    } else {
-        set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
-        set tz [qal_contact_id_read $contact_id [list timezone user_id]]
-        if { $tz eq "" && [qf_is_natural_number $user_id] } {
-            set tz [lang::user::timezone $user_id]
+        
+        if { [catch {set expires_ts [clock scan $expiration] } result] } {
+            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
+            set success_p 0
+        } else {
+            set expires_yyyymmdd_hhmmss_utc [clock format $expires_ts -gmt true]
+            set expires_ltz [lc_time_utc_to_local $expires_yyyymmdd_hhmmss_utc $tz]
         }
-        if { $tz eq "" } {
-            set tz [lang::system::timezone]
-            set expires_ltz [lc_time_utc_to_local_ $expires_yyyymmdd_hhmmss_utc $tz]
-        }
-    }
     
     
         # in cs_ticket_op_periods
@@ -222,7 +207,7 @@ ad_proc -public cs_announcement {
         # using cs_sched_messages_create
         # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link
 
-
+    }
     # cs_announcement (cs rep to multple contacts) 
     # Send announcement / notifiy to subset of contacts by contact_ref, ticket_id is the one
     # that is related to announcement. When ticket_id closes, announcement closes.
