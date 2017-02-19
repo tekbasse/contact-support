@@ -9,30 +9,32 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>t</inherit-templates-p>
     
-    <version name="0.090" url="http://openacs.org/repository/download/apm/contact-support-0.090.apm">
+    <version name="0.115" url="http://openacs.org/repository/download/apm/contact-support-0.115.apm">
         <owner url="mailto:tekbasse@yahoo.com">Benjamin Brink</owner>
         <owner url="http://openacs.org">OpenACS community</owner>
         <summary>Manages contact support issues.</summary>
         <release-date>2017-01-03</release-date>
-        <description format="text/plain">Contact Support package manages interactions and issues with contacts using a ticket system. Built to interface with other support that provides a contact_id. Default assumes contact_id is user_id.</description>
+        <description format="text/plain">Contact Support package manages interactions and issues with contacts using a ticket system. Built to interface with other accounts-ledger package that provides a contact_id. Default assumes contact_id is user_id.</description>
         <license>GNU Gpl 2.0 or higher</license>
         <license_url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html</license_url>
         <maturity>0</maturity>
         <package_instance_name>Contact Support</package_instance_name>
 
-        <provides url="contact-support" version="0.090"/>
+        <provides url="contact-support" version="0.115"/>
         <requires url="q-control" version="0.001"/>
         <requires url="q-forms" version="0.001"/>
 
         <callbacks>
         </callbacks>
         <parameters>
-            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="instanceIdOverride"  description="Override the package_id for this instance. Usually leave blank.. or maybe set to subsite_id or a specific package_id number. See qs_set_instance_id for implementation details." section_name="site-admin"/>
-            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="ShareTicketStatusP"  default="1" description="Answers question: Do contacts and support teams share the same ticket status on each ticket? 1 = yes, 0 = no If not, a contact can keep a ticket open independent of contact support." section_name="contact-support"/>
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="contactTypesRef"  default="1" description="Contacts assigned to user. 1 = from qal_customer_ids_of_user_id, 2 = from qal_vendor_ids_of_user_id, 3 = both 1 and 2, 4 = from qal_contact_ids_of_user_id (choice 3 + others)" section_name="contact-support"/>
-            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="privacyLevel"  default="1" description="Default privacy level assigned to new tickets. 0 = Mnimimal privacy requirements (user logged in ). 5 = requires SSL connection. 9. Ignore automatic subscriptions." section_name="contact-support"/>
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="ignoreReopenP"  default="1" description="Answers question: Allow a contact to keep a ticket open or reopen it for their use without reopening ticket from support perspective? 1=yes 0=no" section_name="contact-support"/>
-            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="SchedRemindersList"  description="Time offsets of when to send notifications about scheduled process with possible interruptions. Values separted by comma and use tcl time math. For example '1 day,1 hour,12 minuites'. 'before' is assumed in the calculation." section_name="contact-support"/>
+            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="instanceIdOverride"  description="Override the package_id for this instance. Usually leave blank.. or maybe set to subsite_id or a specific package_id number. See qs_set_instance_id for implementation details." section_name="site-admin"/>
+            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="privacyLevel"  default="1" description="Default privacy level assigned to new tickets. 0 = Mnimimal privacy requirements (user logged in ). 5 = requires SSL connection. 9. Ignore automatic subscriptions." section_name="contact-support"/>
+            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="schedEventDurationDefault"  default="$expiration_dur * 10" description="Default scheduled event duration as a function of median open-ticket duration. Details: This expression calculates the default duration when cs_stats_ticket_close has enough history to return a duration. Parameter value will be rendered by &#39;expr&#39; and must return an integer.  Reference of  &#39;$expiration_dur&#39; is optional. &#39;expiration_dur&#39; is the duration from cs_stats_ticket_close in integer seconds." section_name="contact-support"/>
+            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="schedEventDurationSuperDefault"  default="92 days" description="Default duration of scheduled events. Expects a Tcl &#39;clock scan&#39; compatible time duration. Examples: &#39;91 days&#39;, &#39;24 hours&#39;, &#39;3600 seconds&#39;. Note that accuracy of duration is based on time units. Use 86400 seconds to represent a day, if you want duration to be a full day. Using &#39;1 day&#39; results with duration calculated based on time between event&#39;s start time and next day. " section_name="contact-support"/>
+            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="schedRemindersList"  default="1 day,1 hour,12 minutes" description="Time offsets of when to send notifications about scheduled process with possible interruptions. Values separated by comma and use tcl time math as rendered in &#39;clock scan&#39;. For example &#39;1 day,1 hour,12 minutes&#39;. &#39;before&#39; is assumed in the calculation." section_name="contact-support"/>
+            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="shareTicketStatusP"  default="1" description="Answers question: Do contacts and support teams share the same ticket status on each ticket? 1 = yes, 0 = no If not, a contact can keep a ticket open independent of contact support." section_name="contact-support"/>
         </parameters>
 
     </version>

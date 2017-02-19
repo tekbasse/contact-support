@@ -146,7 +146,7 @@ ad_proc -private cs_ticket_message_create {
         # Operation is just now scheduled. Trigger:
         #  set notifications 
         #  and possibly cs_announcements
-        #  timing of alert contacts according to parameter SchedRemindersList
+        #  timing of alert contacts according to parameter schedRemindersList
     }
 
 }
@@ -188,17 +188,17 @@ ad_proc -public cs_announcement {
         set begins_yyyymmdd_hhmmss_utc [clock format $begins_ts -gmt true]
 
     }
+
     if { $expiration eq "" && $success_p } {
-        # set expiration 10* the average time to ticket resolution, or default to 365/4=91 days later
+        # set default expiration 
         set expiration_dur [cs_stats_ticket_close 0]
         set expiration $begins
+        set package_id [ad_conn package_id]
         if { $expiration_dur eq "" } {
-            ##code make 91 days a parameter
-            append expiration " + 91 days"
+            append expiration " + " [parameter::get -parameter schedEventDurationSuperDefault -package_id $package_id]
         } else {
-            ##code make 10 a parameter
-            set expiration_dur [expr { $expiration_dur * 10 } ]
-            append expiration " + ${expiration_dur} seconds"
+            set expiration_dur_s [parameter::get -parameter schedEventDurationDefault -package_id $package_id]
+            append expiration " + " "${expiration_dur_s} seconds"
         }
     }
     if { [catch {set expires_ts [clock scan $expiration] } result] } {
@@ -230,7 +230,7 @@ ad_proc -public cs_announcement {
         # automatically convert any "ticket_ref" in announcement into a link via cs_ticket_url_of_t_ref $ticket_ref link
 
         # create cs_sched_messages record
-        #  timing of alert contacts according to parameter SchedRemindersList
+        #  timing of alert contacts according to parameter schedRemindersList
         # using cs_sched_messages_create
         # automatically convert any "ticket_ref" in message into a link via cs_ticket_url_of_t_ref $ticket_ref link
             incr i

@@ -41,7 +41,7 @@ ad_library {
 #    a list of role choices for each permuation of tier/category
 # admin/categories show/edit categories
 
-# for scheduled activities, calculate time offsets using a parameter SchedRemindersList with
+# for scheduled activities, calculate time offsets using a parameter schedRemindersList with
 # values separated by comma, for example, 3 days, 1 day, 1 hour, 10 minutes. Before is assumed.
 #  and hf_clock_scan_interval  
 
@@ -51,7 +51,7 @@ ad_library {
 
 # if ticket is scheduled_operation_p ,
 # alert customers 1 day ahead, 1 hour ahdead, 12 mins ahead to time of service
-# (see package parameter SchedRemindersList )
+# (see package parameter schedRemindersList )
 # by using cs_sched_messages that post to ticket automatically per a sched_proc,
 # 
 
