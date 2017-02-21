@@ -151,7 +151,20 @@ ad_proc -private cs_ticket_message_create {
 
 }
 
-ad_proc -public cs_announcement {
+ad_proc -private cs_announcements {
+    user_id
+} {
+    Returns a list of lists of contact-support announcments relevant to user_id.
+    <br/>
+    fields: id ann_type ticket_id expire_timestamp cs_ann_user_map.notify_p announcement
+    <br/>
+    If there are no announcements, returns an empty list.
+} {
+    upvar 1 instance_id instance_id
+    ##code
+}
+
+ad_proc -private cs_announcement_create {
     announcement_text
     ann_type
     {contact_id_list ""}
@@ -171,6 +184,7 @@ ad_proc -public cs_announcement {
 
     @return 1 if no errors, otherwise returns 0.
 } {
+    upvar 1 instance_id instance_id
     set success_p [hf_list_filter_by_natural_number $contact_id_list]
     set contact_id_list_len [llength $contact_id_list]
     set package_id [ad_conn package_id]    
@@ -309,6 +323,7 @@ ad_proc -private cs_sched_messages_create {
 } {
     Create alerts for contact.
 } {
+    upvar 1 instance_id instance_id
     ##code
 
 }
@@ -416,6 +431,7 @@ ad_proc -private cs_notify_contact_reps {
 } {
     Notify contact reps that subscribe to ticket.
 } {
+    upvar 1 instance_id instance_id
     # based on hf_monitor_alert_trigger (code extracted below)
     # sender email is systemowner
     # to get user_id of systemowner:
@@ -465,6 +481,7 @@ ad_proc -private cs_notify_support_reps {
 } {
     Notify support reps that subscribe to ticket.
 } {
+    upvar 1 instance_id instance_id
     # based on hf_monitor_alert_trigger (code extracted below)
     # sender email is systemowner
     # to get user_id of systemowner:
