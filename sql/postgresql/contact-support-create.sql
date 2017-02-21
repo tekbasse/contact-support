@@ -44,9 +44,11 @@ CREATE TABLE cs_announcements (
     -- If expires
     expire_timestamp      timestamptz,
     -- Users can ask to be notified when this announcement / system wide issue is resolved.
-    on_expire_notify_uids text,
+    -- see table cs_ann_user_map 
+    -- on_expire_notify_uids text,
     -- state of announcement
-    expired_p             varchar(1)
+    expired_p             varchar(1),
+    announcement          text
 );
 
 create index cs_announcements_id_idx on cs_announcements (id);
