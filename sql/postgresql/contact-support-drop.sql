@@ -98,11 +98,11 @@ drop index cs_announcements_id_idx;
 
 DROP TABLE cs_announcements;
 
-drop index cs_ann_user_map_notify_p_idx;
-drop index cs_ann_user_map_user_id_idx;
-drop index cs_ann_user_map_instance_id_idx;
+drop index cs_ann_usre_contact_map_notify_p_idx;
+drop index cs_ann_usre_contact_map_user_id_idx;
+drop index cs_ann_usre_contact_map_instance_id_idx;
 
-DROP TABLE cs_ann_user_map;
+DROP TABLE cs_ann_usre_contact_map;
 
 drop index cs_ticket_ref_id_map_instance_idx;
 drop index cs_ticket_ref_id_map_id_idx;

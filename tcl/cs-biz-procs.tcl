@@ -49,8 +49,8 @@ ad_proc -public cs_ticket_create {
                priority \
                ticket_ref_name \
                ann_type \
-               ann_message
-           ann_message_type \
+               ann_message \
+               ann_message_type \
               ]
 
     qf_nv_list_to_vars $args $p
@@ -110,7 +110,7 @@ ad_proc -public cs_ticket_create {
         if { $ann_message eq "" } {
             set ann_message $message
         }
-        cs_announcement 
+        cs_announcement_create
         ##code        
 
     }
@@ -137,44 +137,17 @@ ad_proc -private cs_ticket_message_create {
 
     ##code
 
-    set prior_sched_op_p 0
-    db_0or1row cs_tickets_sched_op_p_r {select scheduled_operation_p as prior_sched_op_p from cs_tickets
-        where ticket_id=:ticket_id
-        and instance_id=:instance_id}
-    if { $scheduled_maint_req_p && $scheduled_operations_p && !$prior_sched_op_p } {
-        
-        # Operation is just now scheduled. Trigger:
-        #  set notifications 
-        #  and possibly cs_announcements
-        #  timing of alert contacts according to parameter schedRemindersList
-    }
 
 }
 
-ad_proc -private cs_announcement_create {
-    announcement_text
-    ann_type
-    {contact_id_list ""}
-    {begins "now"}
-    {expiration ""}
-    {ticket_id ""}
-    {allow_html_p "0"}
-} {
-    Show announcment to contacts who visit contact-support package. 
-    Event begins at "begins" time stamp. If empty, defaults to "now".
-    Event expires when ticket_id expires or expiration, and/or manual expiration.
-    If allow_html_p is one, allows html to be in announcement_text
-    <br/>
-    If contact_id_list is not empty, announcement only applies to contacts referenced in contact_id_list.
-    <br/>
-    Values of <code>begins</code> and <code>expiration</code> can be relative tcl "now + 3 days, now + 3 hours, now + 15 minutes or yyyy-mm-dd hh:mm:ss"
 
-    @return 1 if no errors, otherwise returns 0.
+ad_proc -private cs_new_event_announce {
+    args
 } {
-    upvar 1 instance_id instance_id
-    set success_p [hf_list_filter_by_natural_number $contact_id_list]
-    set contact_id_list_len [llength $contact_id_list]
-    set package_id [ad_conn package_id]    
+    Set annoucements in contact-support for newly scheduled event
+} {
+    if { $scheduled_maint_req_p && $scheduled_operations_p && !$prior_sched_op_p } {
+
     if { $begins eq "" } {
         set begins "now"
     }
@@ -217,7 +190,10 @@ ad_proc -private cs_announcement_create {
         set expires_timestamp_utc [clock format $expires_ts -gmt true]
     }
 
-    
+
+        set tz [qal_contact_tz $contact_id]
+        set begins_ltz [lc_time_utc_to_local $begins_timestamp_utc $tz]    
+        set expires_ltz [lc_time_utc_to_local $expires_timestamp_utc $tz]
     if { [qf_is_natural_number $ticket_id ] } {
         if { $contact_id_list_len == 1  } {
             # automatically convert any "ticket_ref" in announcement into a (linked) reference 
@@ -247,34 +223,74 @@ ad_proc -private cs_announcement_create {
     } elseif { $ticket_id ne "" } {
         ns_log Warning "cs_announcement: instance_id '${instance_id}' user_id '${user_id} ticket_id '${ticket_id}' not valid"
     }
+        
+        # Operation is just now scheduled. Trigger:
+        #  set notifications 
+        cs_sched_messages_create message_type $message_type begins $begins ticket_id $ticket_id message $message privacy_level $privacy_level
+        #  and cs_announcement_create
+        cs_announcement_create 
 
-    # relatives okay with: clock format \[clock scan "now + 3 days"\]
-    # relative vocabulary includes year, month, week, day, hours, today, now 
-    db_dml cs_announcements_cr {insert into cs_announcements
-        (instance_id,id,ann_type,ticket_id,expire_timestamp,expired_p,announcement)
-        values (:instance_id,:id,:ann_type,:ticket_id,:expire_timestamp,:expired_p,:announcement)
+    }
+}
+
+ad_proc -private cs_announcement_create {
+    announcement_text
+    ann_type
+    {contact_id_list ""}
+    {user_id_list ""}
+    {begins "now"}
+    {expiration ""}
+    {ticket_id ""}
+    {allow_html_p "0"}
+} {
+    Create an announcment for relevant contacts who visit contact-support package. 
+    Event begins at "begins" time stamp. If empty, defaults to "now".
+    Event expires when ticket_id expires or expiration, and/or manual expiration.
+    If allow_html_p is one, allows html to be in announcement_text
+    <br/>
+    If contact_id_list or user_id_list is not empty, announcement only applies to referenced in contact_id_list and/or user_id_list.
+    <br/>
+    If ticket_id exists, announcement ends when ticket_id closes.
+    <br/>
+    Values of <code>begins</code> and <code>expiration</code> can be relative tcl "now + 3 days, now + 3 hours, now + 15 minutes or yyyy-mm-dd hh:mm:ss"
+
+    @return 1 if no errors, otherwise returns 0.
+} {
+    upvar 1 instance_id instance_id
+    set success_p 1
+    if { $contact_id_list ne "" } {
+        set success_p [hf_list_filter_by_natural_number $contact_id_list]
+    }
+    if { $success_p && $user_id_list ne "" } {
+        set success_p [hf_list_filter_by_natural_number $user_id_list]
     }
 
-    set i 0
-    while { $success_p && $i < $contact_id_list_len } {
-        set contact_id [lindex $contact_id_list $i]
-        set tz [qal_contact_tz $contact_id]
-        set begins_ltz [lc_time_utc_to_local $begins_timestamp_utc $tz]    
-        set expires_ltz [lc_time_utc_to_local $expires_timestamp_utc $tz]
-        # using cs_announcement
-        if { $contact_id eq $ticket_contact_id } {
-            # create cs_sched_messages record
-            cs_sched_messages_create message_type $message_type begins $begins ticket_id $ticket_id message $message privacy_level $privacy_leve
+    if { $success_p } {
+        set id [db_nextval cs_id_seq]
+        # relatives okay with: clock format \[clock scan "now + 3 days"\]
+        # relative vocabulary includes year, month, week, day, hours, today, now 
+        db_dml cs_announcements_cr {insert into cs_announcements
+            (instance_id,id,ann_type,ticket_id,expire_timestamp,expired_p,announcement)
+            values (:instance_id,:id,:ann_type,:ticket_id,:expire_timestamp,:expired_p,:announcement)
         }
-        db_dml cs_ann_user_map
-        # Send announcement / notifiy to subset of contacts by contact_ref, 
-        # ticket_id is the one
-        # that is related to announcement. When ticket_id closes, announcement closes.
-        incr i
-    }
+        set user_id ""
+        set notify_p 0
+        foreach contact_id $contact_id_list {
+            db_dml cs_ann_user_contact_map_cr { insert into cs_ann_user_contact_map 
+                (instance_id,ann_id,user_id,contact_id,notify_p)
+                values (:instance_id,:ann_id,:user_id,:contact_id,:notify_p)
+            }
+        }
+        set contact_id ""
+        foreach user_id $user_id_list {
+            db_dml cs_ann_user_contact_map_cr { insert into cs_ann_user_contact_map 
+                (instance_id,ann_id,user_id,contact_id,notify_p)
+                values (:instance_id,:ann_id,:user_id,:contact_id,:notify_p)
+            }
+        }
 
-    ##code
-    
+
+    }
     return $success_p
 }
 

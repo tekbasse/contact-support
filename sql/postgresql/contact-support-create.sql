@@ -8,7 +8,6 @@
  -- or by number of open tickets ahead (by parameter)
  -- or by average response time to opened tickets within (parameter period) and
  --business hours (parameter). 
-
 CREATE SEQUENCE cs_id_seq start 10000;
 SELECT nextval ('cs_id_seq');
 
@@ -44,7 +43,7 @@ CREATE TABLE cs_announcements (
     -- If expires
     expire_timestamp      timestamptz,
     -- Users can ask to be notified when this announcement / system wide issue is resolved.
-    -- see table cs_ann_user_map 
+    -- see table cs_ann_user_contact_map 
     -- on_expire_notify_uids text,
     -- state of announcement
     expired_p             varchar(1),
@@ -67,9 +66,9 @@ CREATE TABLE cs_ann_user_contact_map (
        -- on expire, notify user_id that event is over.
        notify_p integer
 );
-create index cs_ann_user_map_instance_id_idx on cs_ann_user_map (instance_id);
-create index cs_ann_user_map_user_id_idx on cs_ann_user_map (user_id);
-create index cs_ann_user_map_notify_p_idx on cs_ann_user_map (notify_p);
+create index cs_ann_user_contact_map_instance_id_idx on cs_ann_user_contact_map (instance_id);
+create index cs_ann_user_contact_map_user_id_idx on cs_ann_user_contact_map (user_id);
+create index cs_ann_user_contact_map_notify_p_idx on cs_ann_user_contact_map (notify_p);
 
  -- terminology:   SST = support ticket state (open/closed)
  --                CST = contact ticket state (open/closed)
@@ -390,6 +389,8 @@ create index cs_sched_messages_ticket_id_idx on cs_sched_messages (ticket_id);
 create index cs_sched_messages_trigger_ts_idx on cs_sched_messages (trigger_ts);
 create index cs_sched_messages_triggered_p_idx on cs_sched_messages (triggered_p);
 
+
+-- This is for operations specific to a contact_id and ticket_id
 CREATE TABLE cs_ticket_op_periods (
        instance_id    integer,
        ticket_id      integer not null,
