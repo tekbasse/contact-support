@@ -57,12 +57,14 @@ create index cs_announcements_expire_ts_idx on cs_announcements (expire_timestam
 create index cs_announcements_expired_p_idx on cs_announcements (expired_p);
 create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
 
-CREATE TABLE cs_ann_user_map (
+CREATE TABLE cs_ann_user_contact_map (
+       --maps can be between announcement_id and either user_ids or contact_ids
        instance_id        integer,
        -- announcement_id
        ann_id             integer,
        user_id            integer,
-       -- on expire, notify user that event is over.
+       contact_id            integer,
+       -- on expire, notify user_id that event is over.
        notify_p integer
 );
 create index cs_ann_user_map_instance_id_idx on cs_ann_user_map (instance_id);
@@ -112,7 +114,6 @@ create index cs_ann_user_map_notify_p_idx on cs_ann_user_map (notify_p);
     -- a number, 0 Minimal privacy requirements
     --           5 Requires ssl to see, no content via notifications.
     --           9 Don't show to anyone but submitter via ssl.
-    --             Useful in matters of triage, such as rejecting a ticket.
     privacy_level       varchar(1),
     -- Is this ticket trashed?
     trashed_p           varchar(1),
@@ -131,6 +132,7 @@ create index cs_ann_user_map_notify_p_idx on cs_ann_user_map (notify_p);
     -- Is this operation part of required maintenance?
     -- If so, and scheduled_operation_p is false, ask to schedule..
     scheduled_maint_req_p varchar(1),
+    --             Useful in matters of triage, such as rejecting a ticket.
     priority            integer
 );
 
