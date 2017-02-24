@@ -26,7 +26,7 @@ ad_proc -public cs_ticket_create {
     See c_tickets table definition for usage. ann_type, ann_message, and ann_message_type is from cs_announcements table: ann_type, message, message_type 
     <br/>
     To open a ticket with an announcement about a scheduled event, set ann_type to "MEMO"
-   
+    
 } {
     upvar 1 instance_id instance_id
 
@@ -50,8 +50,8 @@ ad_proc -public cs_ticket_create {
                ticket_ref_name \
                ann_type \
                ann_message
-               ann_message_type \
-               ]
+           ann_message_type \
+              ]
 
     qf_nv_list_to_vars $args $p
 
@@ -95,10 +95,10 @@ ad_proc -public cs_ticket_create {
          ignore_reopen_p,unscheduled_service_req_p,scheduled_operation_p,
          scheduled_maint_req_p,priority)
         values (:ticket_id,:instance_id,:contact_id,:authenticated_by,:ticket_category_id,
-         :current_tier_level,:subject,:cs_open_p,:opened_by,:cs_time_opened,
-         :user_open_p,:user_time_opened,:privacy_level,:trashed_p,
-         :ignore_reopen_p,:unscheduled_service_req_p,:scheduled_operation_p,
-         :scheduled_maint_req_p,:priority)
+                :current_tier_level,:subject,:cs_open_p,:opened_by,:cs_time_opened,
+                :user_open_p,:user_time_opened,:privacy_level,:trashed_p,
+                :ignore_reopen_p,:unscheduled_service_req_p,:scheduled_operation_p,
+                :scheduled_maint_req_p,:priority)
     }
 
     cs_ticket_message_create ticket_id $ticket_id contact_id $contact_id privacy_level $privacy_level subject $subject message $message internal_notes $internal_notes internal_p $internal_p
@@ -142,26 +142,13 @@ ad_proc -private cs_ticket_message_create {
         where ticket_id=:ticket_id
         and instance_id=:instance_id}
     if { $scheduled_maint_req_p && $scheduled_operations_p && !$prior_sched_op_p } {
-                
+        
         # Operation is just now scheduled. Trigger:
         #  set notifications 
         #  and possibly cs_announcements
         #  timing of alert contacts according to parameter schedRemindersList
     }
 
-}
-
-ad_proc -private cs_announcements {
-    user_id
-} {
-    Returns a list of lists of contact-support announcments relevant to user_id.
-    <br/>
-    fields: id ann_type ticket_id expire_timestamp cs_ann_user_map.notify_p announcement
-    <br/>
-    If there are no announcements, returns an empty list.
-} {
-    upvar 1 instance_id instance_id
-    ##code
 }
 
 ad_proc -private cs_announcement_create {
@@ -263,6 +250,11 @@ ad_proc -private cs_announcement_create {
 
     # relatives okay with: clock format \[clock scan "now + 3 days"\]
     # relative vocabulary includes year, month, week, day, hours, today, now 
+    db_dml cs_announcements_cr {insert into cs_announcements
+        (instance_id,id,ann_type,ticket_id,expire_timestamp,expired_p,announcement)
+        values (:instance_id,:id,:ann_type,:ticket_id,:expire_timestamp,:expired_p,:announcement)
+    }
+
     set i 0
     while { $success_p && $i < $contact_id_list_len } {
         set contact_id [lindex $contact_id_list $i]
@@ -270,48 +262,16 @@ ad_proc -private cs_announcement_create {
         set begins_ltz [lc_time_utc_to_local $begins_timestamp_utc $tz]    
         set expires_ltz [lc_time_utc_to_local $expires_timestamp_utc $tz]
         # using cs_announcement
-        set now_ts [clock seconds]
         if { $contact_id eq $ticket_contact_id } {
             # create cs_sched_messages record
-            #  timing of alert contacts according to parameter schedRemindersList
-            # using cs_sched_messages_create
-
-            set package_id [ad_conn package_id]
-            set sched_reminder [parameter::get -parameter schedRemindersList -package_id $package_id]
-            set sched_reminder_list [split $sched_reminder ","]
-            set triggered_p 0
-            if { $allow_html_p } {
-                set message_type "html"
-            } else {
-                set message_type "text"
-            }
-            foreach sr_ts $sched_reminder_list {
-                set trigger $begins
-                append trigger " - " $sr_ts
-                if { [catch {set trigger_ts [clock scan $trigger] } result] } {
-                    ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} trigger '${trigger}' Error '${result}'"
-                    if { [ns_conn isconnected] } {
-                        set err_message $trigger
-                        append err_message " " $result
-                        util_user_message -message $err_message
-                    }
-                    set success_p 0
-                } else {
-                    set trigger_timestamp_utc [clock format $trigger_ts -gmt true]
-                }
-                
-                db_dml { insert into cs_sched_messages
-                    (instance_id,ticket_id,trigger_ts,triggered_p,message,privacy_level,message_type)
-                    values (:instance_id,:ticket_id,:trigger_ts,:triggered_p,:message,:privacy_level,:message_type)
-                }
-            }
-            
-            incr i
+            cs_sched_messages_create message_type $message_type begins $begins ticket_id $ticket_id message $message privacy_level $privacy_leve
         }
+        db_dml cs_ann_user_map
+        # Send announcement / notifiy to subset of contacts by contact_ref, 
+        # ticket_id is the one
+        # that is related to announcement. When ticket_id closes, announcement closes.
+        incr i
     }
-    # cs_announcement (cs rep to multple contacts) 
-    # Send announcement / notifiy to subset of contacts by contact_ref, ticket_id is the one
-    # that is related to announcement. When ticket_id closes, announcement closes.
 
     ##code
     
@@ -321,11 +281,55 @@ ad_proc -private cs_announcement_create {
 ad_proc -private cs_sched_messages_create {
     args
 } {
-    Create alerts for contact.
+    Create alerts for a ticket_id
+    required args: begins message privacy_level ticket_id
+    <br/>
+    defaults: message_type ('text' or 'html')
+    <br/>
+    For privacy_level meaning, see table comments for cs_tickets.privacy_label
+    <br/>
+    Returns 1 if successful, otherwise returns 0.
+    
 } {
     upvar 1 instance_id instance_id
-    ##code
+    set triggered_p 0
+    set message_type "text"    
+    set names_list [list message_type begins ticket_id message privacy_level]
 
+    set ignored_list [qf_nv_list_to_vars $args $names_list]
+    if { [llength $ignored_list ] > 0 } {
+        ns_log Notice "cs_announcement.296: ignored: '${ignored_list}'"
+    }
+    #  timing of alert contacts according to parameter schedRemindersList
+    set package_id [ad_conn package_id]
+    set sched_reminder [parameter::get -parameter schedRemindersList -package_id $package_id]
+    set sched_reminder_list [split $sched_reminder ","]
+    set now_ts [clock seconds]
+    foreach sr_ts $sched_reminder_list {
+        set trigger $begins
+        append trigger " - " $sr_ts
+        if { [catch {set trigger_ts [clock scan $trigger] } result] } {
+            if { [ns_conn isconnected] } {
+                set user_id [ad_conn user_id]
+                ns_log Notice "cs_announcement.309: instance_id '${instance_id}' user_id '${user_id} trigger '${trigger}' Error '${result}'"
+                set err_message $trigger
+                append err_message " " $result
+                util_user_message -message $err_message
+            } else {
+                ns_log Notice "cs_announcement.314: instance_id '${instance_id}' trigger '${trigger}' Error '${result}'"
+            }
+            set success_p 0
+        } else {
+            set trigger_timestamp_utc [clock format $trigger_ts -gmt true]
+        }
+        if { $success_p && $trigger_ts > $now_ts } {
+            db_dml { insert into cs_sched_messages
+                (instance_id,ticket_id,trigger_ts,triggered_p,message,privacy_level,message_type)
+                values (:instance_id,:ticket_id,:trigger_ts,:triggered_p,:message,:privacy_level,:message_type)
+            }
+        }
+    }
+    return $success_p
 }
 
 ad_proc -public cs_ticket_open {

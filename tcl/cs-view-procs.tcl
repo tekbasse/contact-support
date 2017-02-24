@@ -314,3 +314,17 @@ ad_proc -private cs_ticket_read {
     }
     return $nv_list
 }
+
+
+ad_proc -private cs_announcements {
+    user_id
+} {
+    Returns a list of lists of contact-support announcments relevant to user_id.
+    <br/>
+    fields: id ann_type ticket_id expire_timestamp cs_ann_user_map.notify_p announcement
+    <br/>
+    If there are no announcements, returns an empty list.
+} {
+    upvar 1 instance_id instance_id
+    ##code
+}
