@@ -40,6 +40,8 @@ CREATE TABLE cs_announcements (
     ann_type              varchar(8),
     -- If associated with a ticket id
     ticket_id             integer,
+    -- If starts at some time in the future
+    start_timestamp       timestamptz,
     -- If expires
     expire_timestamp      timestamptz,
     -- Users can ask to be notified when this announcement / system wide issue is resolved.
@@ -53,6 +55,7 @@ CREATE TABLE cs_announcements (
 create index cs_announcements_id_idx on cs_announcements (id);
 create index cs_announcements_ticket_id_idx on cs_announcements (ticket_id);
 create index cs_announcements_expire_ts_idx on cs_announcements (expire_timestamp);
+create index cs_announcements_start_ts_idx on cs_announcements (start_timestamp);
 create index cs_announcements_expired_p_idx on cs_announcements (expired_p);
 create index cs_announcements_instance_id_idx on cs_announcements (instance_id);
 

@@ -93,6 +93,7 @@ DROP TABLE cs_tickets;
 drop index cs_announcements_instance_id_idx;
 drop index cs_announcements_expired_p_idx;
 drop index cs_announcements_expire_ts_idx;
+drop index cs_announcements_start_ts_idx;
 drop index cs_announcements_ticket_id_idx;
 drop index cs_announcements_id_idx;
 
