@@ -315,16 +315,73 @@ ad_proc -private cs_ticket_read {
     return $nv_list
 }
 
+ad_proc -private cs_announcement_ids {
+} {
+    Returns a list of unique contact-support announcement_id(s) for user_id and their contacts.
+} {
+    upvar 1 instance_id instance_id
+    set user_id [ad_conn user_id]
+    set contact_id_list [qal_contact_ids_of_user_id $user_id]
+    set ann_list [db_list cs_ann_user_contact_map_id_list "select ann_id \
+        from cs_ann_user_contact_map \
+        where user_id=:user_id or \
+        and instance_id=:instance_id \
+        and trashed_p!='1' \
+        and contact_id in ([template::util::tcl_to_sql_list ${contact_id_list} ])"]
+    if { [llength $ann_list] > 1 } {
+        set ann_ids_list [qf_uniques_of $ann_list]
+    } else {
+        set ann_ids_list $ann_list
+    }
+    return $ann_ids_list
+}
+
+ad_proc -private cs_announcement_close {
+    ann_id
+    status "#contact-support.resolved#"
+} {
+    Close announcement_id and notify users that event has ended with status.
+} {
+    set exists_p [db_0or1row cs_announcement_r1 {select id,ann_type,ticket_id,start_timestamp,expire_timestamp,expired_p,announcement
+        from cs_announcements 
+        where instance_id=:instance_id
+        and id=:ann_id}]
+    if { $exists_p } {
+        set user_id_list [db_list cs_ann_user_contact_map_user_list {select user_id from
+            cs_ann_user_contact_map
+            where ann_id=:ann_id
+            and instance_id=:instance_id
+            and notify_p=!'0'}]
+        foreach user_id $user_id_list {
+
+            ##code
+            #send a message to these users (no cc...)
+        }
+        db_dml {update cs_announcements set expired_p='1' where id=:ann_id and instance_id=:instance_id}
+        db_dml {update cs_ann_user_contact_map_tr set trashed_p='1' where ann_id=:ann_id and instance_id=:instance_id}
+    } else {
+        ns_log Warning "cs_annoucement_close: instance_id ${instance_id} ann_id '${ann_id}' does not exist."
+    }
+    return $exists_p
+}
+
 
 ad_proc -private cs_announcements {
-    user_id
+    ann_id_list
 } {
-    Returns a list of lists of contact-support announcments relevant to user_id.
+    Returns a list of lists of contact-support announcments relevant to annnouncement ids (ann_id_list) and user_id.
     <br/>
-    fields: id ann_type ticket_id expire_timestamp cs_ann_user_map.notify_p announcement
+    fields: id ann_type ticket_id start_timestamp expire_timestamp expired_p annoucement
     <br/>
     If there are no announcements, returns an empty list.
 } {
     upvar 1 instance_id instance_id
-    ##code
+    set announcements_lists [list ]
+    
+    set annoucements_lists [db_list_of_lists cs_announcements_list "select id,ann_type,\
+ ticket_id,start_timestamp,expire_timestamp,expired_p,announcement from cs_announcements \
+ where ( now() > start_timestamp or start_timestamp is null) and expired_p!='1' and \
+ id in (select ann_id from cs_ann_user_contact_map where user_id=:user_id or \
+ contact_id in ([template::util::tcl_to_sql_list ${contact_id_list} ])"]
+    return $announcements_lists
 }

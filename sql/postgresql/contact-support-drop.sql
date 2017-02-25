@@ -100,6 +100,7 @@ drop index cs_announcements_id_idx;
 DROP TABLE cs_announcements;
 
 drop index cs_ann_user_contact_map_notify_p_idx;
+drop index cs_ann_user_contact_map_trashed_p_idx;
 drop index cs_ann_user_contact_map_user_id_idx;
 drop index cs_ann_user_contact_map_instance_id_idx;
 

@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="contact-support" package_version="0.010" locale="en_US" charset="ISO-8859-1">
-<msg key="Created">Created</msg>
 <msg key="Contact_Support">Contact Support</msg>
-<msg key="contact_support">Contact Support</msg>
+<msg key="Contact_us">Contact us.</msg>
+<msg key="Contact_us_if_you_have_question">If you have a question, contact us.</msg>
+<msg key="Created">Created</msg>
+<msg key="Do_you_have_any_questions_q">Do you have any questions?</msg>
 <msg key="ID">ID</msg>
 <msg key="Last_Modified">Last Modified</msg>
+<msg key="No_more_notices_to_be_sent">No more notices will be sent about this.</msg>
+<msg key="You_requested_to_be_notified">You requested to be notified.</msg>
 <msg key="assign">assign</msg>
+<msg key="circumstances_ended">The circumstances about this announcement have ended.</msg>
 <msg key="close">close</msg>
 <msg key="closed">closed</msg>
+<msg key="closed_and_will_not_fix">Closed and will not fix.</msg>
+<msg key="contact_support">Contact Support</msg>
 <msg key="new_ticket">new_ticket</msg>
-<msg key="open">open</msg>
 <msg key="notice">Notice</msg>
+<msg key="open">open</msg>
+<msg key="resolved">Resolved</msg>
 <msg key="subscribe">subscribe</msg>
 <msg key="ticket">ticket</msg>
 <msg key="ticket_ref_confidential">(Ticket reference withheld.)</msg>

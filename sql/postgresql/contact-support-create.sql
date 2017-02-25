@@ -65,13 +65,15 @@ CREATE TABLE cs_ann_user_contact_map (
        -- announcement_id
        ann_id             integer,
        user_id            integer,
-       contact_id            integer,
+       contact_id         integer,
+       trashed_p          varchar(1) default '0',
        -- on expire, notify user_id that event is over.
-       notify_p integer
+       notify_p           varchar(1) default '0'
 );
 create index cs_ann_user_contact_map_instance_id_idx on cs_ann_user_contact_map (instance_id);
 create index cs_ann_user_contact_map_user_id_idx on cs_ann_user_contact_map (user_id);
 create index cs_ann_user_contact_map_notify_p_idx on cs_ann_user_contact_map (notify_p);
+create index cs_ann_user_contact_map_trashed_p_idx on cs_ann_user_contact_map (trashed_p);
 
  -- terminology:   SST = support ticket state (open/closed)
  --                CST = contact ticket state (open/closed)
@@ -91,7 +93,7 @@ create index cs_ann_user_contact_map_notify_p_idx on cs_ann_user_contact_map (no
  CREATE TABLE cs_tickets (
     ticket_id           integer not null,
     instance_id         integer,
-    contact_id         integer not null,
+    contact_id          integer not null,
  -- authenticated_by is handy for indirect posts (such as via call center operator)
     authenticated_by    varchar(40),
     -- current category_id
