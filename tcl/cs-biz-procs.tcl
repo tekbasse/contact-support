@@ -540,3 +540,33 @@ ad_proc -private cs_notify_support_reps {
     }
     return 1
 }
+
+ad_proc -private cs_announcement_close {
+    ann_id
+    status "#contact-support.resolved#"
+} {
+    Close announcement_id and notify users that event has ended with status.
+} {
+    set exists_p [db_0or1row cs_announcement_r1 {select id,ann_type,ticket_id,start_timestamp,expire_timestamp,expired_p,announcement
+        from cs_announcements 
+        where instance_id=:instance_id
+        and id=:ann_id}]
+    if { $exists_p } {
+        set user_id_list [db_list cs_ann_user_contact_map_user_list {select user_id from
+            cs_ann_user_contact_map
+            where ann_id=:ann_id
+            and instance_id=:instance_id
+            and notify_p=!'0'}]
+        foreach user_id $user_id_list {
+
+            ##code
+            #send a message to these users (no cc...)
+        }
+        db_dml {update cs_announcements set expired_p='1' where id=:ann_id and instance_id=:instance_id}
+        db_dml {update cs_ann_user_contact_map_tr set trashed_p='1' where ann_id=:ann_id and instance_id=:instance_id}
+    } else {
+        ns_log Warning "cs_annoucement_close: instance_id ${instance_id} ann_id '${ann_id}' does not exist."
+    }
+    return $exists_p
+}
+
