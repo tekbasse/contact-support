@@ -122,21 +122,39 @@ ad_proc -private cs_ticket_message_create {
 } {
     Create a message for a ticket_id
     <br/>
-    args: contact_id ticket_id ticket_ref privacy_level message internal_notes internal_p
+    args: contact_id ticket_id ticket_ref privacy_level message internal_notes internal_p user_id
     <br/>
-    required args: ticket_id (message or internal_notes)
+    required args: (ticket_id or ticket_ref ) (message or internal_notes)
+    <br/>
+    user_id is used only when posting from a scheduled proc.
 } {
     upvar 1 instance_id instance_id
-    set p [list ticket_id ticket_ref privacy_level message internal_notes internal_p]
+    set success_p 1
+    set p [list ticket_id ticket_ref privacy_level message internal_notes internal_p user_id]
     qf_nv_list_to_vars $args $p
+    if { [ns_conn isconnected] } {
+        set posted_by [ad_conn user_id]
+    } else {
+        set posted_by $user_id
+    }
+    set message
+    if { $message eq "" && $internal_notes eq "" } {
+        set success_p 0
+    }
+    if { $ticket_id eq "" && $success_p } { 
+        set ticket_or_message_id [cs_id_of_t_ref $ticket_ref]
+        # cross-ref to ticket_id
 
-    set posted_by [ad_conn user_id]
-
-    set message_id [cs_id_seq_nextval message_ref]
-    # set message_ref  --external reference of message_id
-
+        if { $ticket_id eq "" } {
+            set success_p 0
+        }
+    }
+    if { $success_p } {
+        set message_id [cs_id_seq_nextval message_ref]
+        # set message_ref  --external reference of message_id (returned by cs_id_seq_nextval)
+        db_dml 
     ##code
-
+    }
 
 }
 

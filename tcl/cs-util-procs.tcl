@@ -68,7 +68,8 @@ ad_proc -private cs_contact_ids_of_user_id {
 ad_proc -private cs_id_of_t_ref {
     t_ref
 } {
-    Returns ticket or message_id from cs_ticket_ref_id_map
+    Returns ticket or message_id from cs_ticket_ref_id_map.
+    If reference not found, returns empty string.
 } {
     upvar 1 instance_id instance_id
     set id ""
