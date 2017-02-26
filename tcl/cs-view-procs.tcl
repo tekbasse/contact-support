@@ -322,12 +322,10 @@ ad_proc -private cs_announcement_ids {
     upvar 1 instance_id instance_id
     set user_id [ad_conn user_id]
     set contact_id_list [qal_contact_ids_of_user_id $user_id]
-    set ann_list [db_list cs_ann_user_contact_map_id_list "select ann_id \
-        from cs_ann_user_contact_map \
-        where user_id=:user_id or \
+    set ann_list [db_list cs_ann_user_contact_map_id_list "select ann_id from cs_ann_user_contact_map \
+        where ( user_id=:user_id or contact_id in ([template::util::tcl_to_sql_list ${contact_id_list} ]) ) \
         and instance_id=:instance_id \
-        and trashed_p!='1' \
-        and contact_id in ([template::util::tcl_to_sql_list ${contact_id_list} ])"]
+        and trashed_p!='1'"]
     if { [llength $ann_list] > 1 } {
         set ann_ids_list [qf_uniques_of $ann_list]
     } else {
@@ -340,19 +338,18 @@ ad_proc -private cs_announcement_ids {
 ad_proc -private cs_announcements {
     ann_id_list
 } {
-    Returns a list of lists of contact-support announcments relevant to annnouncement ids (ann_id_list) and user_id.
+    Returns a list of ordered lists of contact-support announcments relevant to annnouncement ids (ann_id_list) and user_id.
     <br/>
-    fields: id ann_type ticket_id start_timestamp expire_timestamp expired_p annoucement
+    ordered fields: id ann_type ticket_id start_timestamp expire_timestamp expired_p annoucement
     <br/>
     If there are no announcements, returns an empty list.
 } {
     upvar 1 instance_id instance_id
     set announcements_lists [list ]
     
-    set annoucements_lists [db_list_of_lists cs_announcements_list "select id,ann_type,\
+    set announcements_lists [db_list_of_lists cs_announcements_list "select id,ann_type, \
  ticket_id,start_timestamp,expire_timestamp,expired_p,announcement from cs_announcements \
  where ( now() > start_timestamp or start_timestamp is null) and expired_p!='1' and \
- id in (select ann_id from cs_ann_user_contact_map where user_id=:user_id or \
- contact_id in ([template::util::tcl_to_sql_list ${contact_id_list} ])"]
+ id in ([template::util::tcl_to_sql_list ${ann_id_list} ])"]
     return $announcements_lists
 }
