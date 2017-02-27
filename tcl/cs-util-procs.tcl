@@ -379,3 +379,14 @@ ad_proc -private cs_median_human_time {
     }
     return $et_time
 }
+
+ad_proc -private cs_privacy_level {
+    privacy_level
+} {
+    Returns privacy level passed to proc. Returns package default value if not supplied.
+} {
+    if { $privacy_level eq "" } {
+        set privacy_level [parameter::get -parameter privacyLevel -package_id [ad_conn package_id]]
+    }
+    return $privacy_level
+}

@@ -118,6 +118,7 @@ create index cs_ann_user_contact_map_trashed_p_idx on cs_ann_user_contact_map (t
     -- a number, 0 Minimal privacy requirements
     --           5 Requires ssl to see, no content via notifications.
     --           9 Don't show to anyone but submitter via ssl.
+    -- default provided by package parameter.
     privacy_level       varchar(1),
     -- Is this ticket trashed?
     trashed_p           varchar(1),

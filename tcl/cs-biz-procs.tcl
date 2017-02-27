@@ -60,10 +60,7 @@ ad_proc -public cs_ticket_create {
     }
     set success_p 1
     set trashed_p 0
-    if { $privacy_level eq "" } {
-        set package_id [ad_conn package_id]
-        set privacy_level [parameter::get -parameter privacyLevel -package_id $package_id]
-    }               
+    set privacy_level [cs_privacy_level $privacy_level ]
     if { $ignore_reopen_p eq "" } {
         set package_id [ad_conn package_id]
         set ignore_reopen_p [parameter::get -parameter ignoreReopenP -package_id $package_id]
@@ -128,19 +125,25 @@ ad_proc -private cs_ticket_message_create {
     <br/>
     user_id is used only when posting from a scheduled proc.
     <br/>
+    Default values: message "", internal_notes "", internal_p 0, privacy_level (see package parameter privacyLevel)
+    <br/>
     Returns message_ref or empty string if input doesn't validate.
 } {
     upvar 1 instance_id instance_id
     set success_p 1
     set message_ref ""
+    set internal_p 0
     set p [list ticket_id ticket_ref privacy_level message internal_notes internal_p user_id]
     qf_nv_list_to_vars $args $p
     if { [ns_conn isconnected] } {
         set posted_by [ad_conn user_id]
     } else {
-        set posted_by $user_id
+        if { $user_id eq "" } {
+            set poster_id $instance_id
+        } else {
+            set posted_by $user_id
+        }
     }
-    set message
     if { $message eq "" && $internal_notes eq "" } {
         set success_p 0
         ns_log Notice "cs_ticket_message_create.146: input error. message '' internal_notes '' instance_id '${instance_id}' "
@@ -148,17 +151,19 @@ ad_proc -private cs_ticket_message_create {
     if { $ticket_id eq "" && $success_p } { 
         set ticket_or_message_id [cs_id_of_t_ref $ticket_ref]
         # cross-ref to ticket_id
-
         if { $ticket_id eq "" } {
             ns_log Warning "cs_ticket_message_create.153: instance_id '${instance_id}' ticket_ref '${ticket_ref}' ticket_id ''"
             set success_p 0
         }
     }
     if { $success_p } {
+        set trashed_p 0
+        set privacy_level [cs_privacy_level $privacy_level]
         set message_id [cs_id_seq_nextval message_ref]
         # set message_ref  --external reference of message_id (returned by cs_id_seq_nextval)
-        db_dml 
-    ##code
+        db_dml cs_ticket_messages_cr {insert into cs_ticket_messages
+            (instance_id,post_id,ticket_id,posted_by,post_time,message,privacy_level,internal_notes,internal_p,trashed_p)
+            values (:instance_id,:message_id,:ticket_id,:posted_by,now(),:message,:privacy_level,:internal_notes,:internal_p,:trashed_p)
     }
     return $message_ref
 }
