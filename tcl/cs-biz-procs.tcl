@@ -385,11 +385,14 @@ ad_proc -public cs_ticket_open {
     args
 } {
     Open a contact-support ticket.
-
+    
     @return ticket_id, or empty string if fails.
 } {
     upvar 1 instance_id instance_id
     # Remember that it might have been closed (already exists and re-opened)
+    # get ticket_id from ticket_ref
+    # Does user have write perission granted by contact for property_label?
+    # property_label is default non_assets
     ##code
 
     return $ticket_id
