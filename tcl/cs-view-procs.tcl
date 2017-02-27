@@ -364,10 +364,15 @@ ad_proc -private cs_announcements_agenda {
 } {
     upvar 1 instance_id instance_id
     set user_id [ad_conn user_id]
-    set admin_p [permission::permission_p -party_id $user_id \
-                     -object_id [ad_conn package_id] -privilege admin]
-    set announcements_lists [db_list_of_lists cs_announcements_list_all {select id,ann_type, 
-        ticket_id,start_timestamp,expire_timestamp,expired_p,announcement from cs_announcements 
-        where ( now() > start_timestamp or start_timestamp is null) and expired_p!='1' }]
+    set package_id [ad_conn package_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    if { $admin_p } {
+        set announcements_lists [db_list_of_lists cs_announcements_list_all {select id,ann_type, 
+            ticket_id,start_timestamp,expire_timestamp,expired_p,announcement from cs_announcements 
+            where ( now() > start_timestamp or start_timestamp is null) and expired_p!='1' }]
+    } else {
+        set announcements_lists [list ]
+        ns_log Notice "cs_announcemenets_agenda.375: access denied. user_id '${user_id}' package_id '${package_id}'"
+    }
     return $announcements_lists
 }
