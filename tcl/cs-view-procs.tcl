@@ -353,6 +353,7 @@ ad_proc -private cs_announcements {
 }
 
 ad_proc -private cs_announcements_agenda {
+    {property_label "non_assets"}
 } {
     Returns a list of ordered lists of all unexpired and future contact-support announcments 
     <br/>
@@ -360,14 +361,12 @@ ad_proc -private cs_announcements_agenda {
     <br/>
     If there are no announcements, returns an empty list.
     <br/>
-    Must have package admin permissions.
+    Must have qc_permission write permissions on property_label (non_assets).
 } {
     upvar 1 instance_id instance_id
     set user_id [ad_conn user_id]
-    set package_id [ad_conn package_id]
-##code  change permission to use hf_permission_p, with property non_assets
-    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-    if { $admin_p } {
+    set write_p [qc_permission_p $user_id $instance_id $property_label write $instance_id]
+    if { $write_p } {
         set announcements_lists [db_list_of_lists cs_announcements_list_all {select id,ann_type, 
             ticket_id,start_timestamp,expire_timestamp,expired_p,announcement from cs_announcements 
             where ( now() > start_timestamp or start_timestamp is null) and expired_p!='1' }]
