@@ -49,6 +49,8 @@ CREATE TABLE cs_announcements (
     -- on_expire_notify_uids text,
     -- state of announcement
     expired_p             varchar(1),
+    -- Answers question: support html in announcement? ie @noquote in template?
+    allow_html_p          varchar(1),
     announcement          text
 );
 

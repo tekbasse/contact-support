@@ -23,7 +23,7 @@ ad_proc -public cs_ticket_create {
     args: 
     contact_id authenticated_by ticket_category_id current_tier_level subject message internal_notes ignore_reopen_p unscheduled_service_req_p scheduled_operation_p scheduled_maint_req_p priority ann_type ann_message ann_message_type
     <br/>
-    See c_tickets table definition for usage. ann_type, ann_message, and ann_message_type is from cs_announcements table: ann_type, message, message_type 
+    See c_tickets table definition for usage. ann_message, and ann_message_type is from cs_announcements table: ann_type, message
     <br/>
     To open a ticket with an announcement about a scheduled event, set ann_type to "MEMO"
     
@@ -31,7 +31,6 @@ ad_proc -public cs_ticket_create {
     upvar 1 instance_id instance_id
 
     set p [list \
-               ticket_id \
                ticket_ref_name \
                contact_id \
                authenticated_by \
@@ -51,7 +50,9 @@ ad_proc -public cs_ticket_create {
                ann_type \
                ann_message \
                ann_message_type \
-              ]
+               begins \
+               expiration \
+               allow_html_p ]
 
     qf_nv_list_to_vars $args $p
 
@@ -98,20 +99,24 @@ ad_proc -public cs_ticket_create {
                 :scheduled_maint_req_p,:priority)
     }
 
-    cs_ticket_message_create ticket_id $ticket_id contact_id $contact_id privacy_level $privacy_level subject $subject message $message internal_notes $internal_notes internal_p $internal_p
-
-    if { $scheduled_maint_req_p && $scheduled_operations_p && $ann_type ne "" } {
+    set message_ref [cs_ticket_message_create ticket_id $ticket_id contact_id $contact_id privacy_level $privacy_level subject $subject message $message internal_notes $internal_notes internal_p $internal_p]
+    if { $message_ref eq "" } {
+        set sucess_p 0
+    }
+    if { $success_p && $scheduled_maint_req_p && $scheduled_operations_p && $ann_type ne "" } {
 
         # Operation has been scheduled with ticket creation.
         # set any annoucements (and advanced notices ie scheduled messages) associated with scheduled event
         if { $ann_message eq "" } {
             set ann_message $message
         }
-        cs_announcement_create
-        ##code        
+        set success_p [cs_announcement_create $ann_message $ann_message_type $contact_id "" $begins $expiration $ticket_id $allow_html_p]
 
     }
-    return $success_p
+    if { $success_p } {
+        set return_id $ticket_id
+    }
+    return $return_id
 }
 
 ad_proc -private cs_ticket_message_create {
@@ -298,8 +303,8 @@ ad_proc -private cs_announcement_create {
         # relatives okay with: clock format \[clock scan "now + 3 days"\]
         # relative vocabulary includes year, month, week, day, hours, today, now 
         db_dml cs_announcements_cr {insert into cs_announcements
-            (instance_id,id,ann_type,ticket_id,expire_timestamp,expired_p,announcement)
-            values (:instance_id,:id,:ann_type,:ticket_id,:expire_timestamp,:expired_p,:announcement)
+            (instance_id,id,ann_type,ticket_id,expire_timestamp,expired_p,announcement,allow_html_p)
+            values (:instance_id,:id,:ann_type,:ticket_id,:expire_timestamp,:expired_p,:announcement,:allow_html_p)
         }
         set user_id ""
         set notify_p 0

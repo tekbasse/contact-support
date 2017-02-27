@@ -346,7 +346,7 @@ ad_proc -private cs_announcements {
 } {
     upvar 1 instance_id instance_id
     set announcements_lists [db_list_of_lists cs_announcements_list "select id,ann_type, \
- ticket_id,start_timestamp,expire_timestamp,expired_p,announcement from cs_announcements \
+ ticket_id,start_timestamp,expire_timestamp,expired_p,allow_html_p,announcement from cs_announcements \
  where ( now() > start_timestamp or start_timestamp is null) and expired_p!='1' and \
  id in ([template::util::tcl_to_sql_list ${ann_id_list} ])"]
     return $announcements_lists
@@ -357,7 +357,7 @@ ad_proc -private cs_announcements_agenda {
 } {
     Returns a list of ordered lists of all unexpired and future contact-support announcments 
     <br/>
-    ordered fields: id ann_type ticket_id start_timestamp expire_timestamp expired_p annoucement
+    ordered fields: id ann_type ticket_id start_timestamp expire_timestamp expired_p allow_html_p announcement
     <br/>
     If there are no announcements, returns an empty list.
     <br/>
@@ -368,7 +368,7 @@ ad_proc -private cs_announcements_agenda {
     set write_p [qc_permission_p $user_id $instance_id $property_label write $instance_id]
     if { $write_p } {
         set announcements_lists [db_list_of_lists cs_announcements_list_all {select id,ann_type, 
-            ticket_id,start_timestamp,expire_timestamp,expired_p,announcement from cs_announcements 
+            ticket_id,start_timestamp,expire_timestamp,expired_p,allow_html_p,announcement from cs_announcements 
             where ( now() > start_timestamp or start_timestamp is null) and expired_p!='1' }]
     } else {
         set announcements_lists [list ]
