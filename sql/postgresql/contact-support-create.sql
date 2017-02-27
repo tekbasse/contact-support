@@ -106,15 +106,19 @@ create index cs_ann_user_contact_map_trashed_p_idx on cs_ann_user_contact_map (t
     -- Cannot rely on date, because cs_time_closed may exist from prior closing of ticket
     -- if for example cs_time_opened is after cs_time_closed
     cs_open_p           varchar(1),
+    -- for history of opened_by, see cs_ticket_action_log.
+    --first opened_by:
     opened_by           integer not null,
-    cs_time_opened      timestamptz not null,
+    --first cs open or response time
+    cs_time_opened      timestamptz,
     cs_time_closed      timestamptz,
     cs_closed_by        integer,
     -- ticket state for contacts.
     -- Cannot rely on date, because user_time_closed may exist from prior closing of ticket
     -- if for example user_time_opened is after user_time_closed
     user_open_p         varchar(1),
-    user_time_opened    timestamptz not null,
+    --first user open or response time
+    user_time_opened    timestamptz,
     user_time_closed    timestamptz,
     user_closed_by      integer,
     -- a number, 0 Minimal privacy requirements

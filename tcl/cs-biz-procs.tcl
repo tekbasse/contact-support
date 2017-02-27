@@ -385,7 +385,12 @@ ad_proc -public cs_ticket_open {
     args
 } {
     Open a contact-support ticket.
-    
+    <br/>
+    args: ticket_id ticket_ref message_ref user_id
+    <br/>
+    Requires: one of: ticket_id, ticket_ref, message_ref
+    If via scheduled procedure, also requires user_id
+    <br/>
     @return ticket_id, or empty string if fails.
 } {
     upvar 1 instance_id instance_id
@@ -394,7 +399,44 @@ ad_proc -public cs_ticket_open {
     # Does user have write perission granted by contact for property_label?
     # property_label is default non_assets
     ##code
+    if { [ns_conn isconnected] } {
+        set user_id [ad_conn user_id]
+    } 
+    # is user_id allowed for cs_tickets.contact_id or instance_id (support's contact_id_?
 
+    if { ![qf_is_natural_number $ticket_id ] } {
+        if { $ticket_ref ne "" } {
+            set ticket_id [cs_id_of_t_ref $ticket_ref]
+        } elseif { $message_ref ne "" } {
+            set message_id [cs_id_of_t_ref $message_ref]
+            set ticket_id [cs_ticket_id_of $message_id]
+        }
+    }
+
+        if { $ticket_id ne "" } {
+
+            # get ticket's contact_id,user_open_p,cs_open_p,ignore_reopen_p
+##code
+    set contact_write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
+    if { !$contact_write_p } {
+        set support_write_p [qc_permission_p $user_id $instance_id $property_label write $instance_id]
+    } else {
+        # choose most external permission when possible
+        # to avoid a dual permissioned person accidently re-opening support ticket
+        set support_write_p 0
+    }
+    if { $contact_write_p || $support_write_p } {
+
+
+            if { $contact_write_p } {
+                db_dml cs_tickets_contact_open {update cs_tickets set user_open_p='1'
+                }
+            } else {
+                db_dml cs_tickets_support_open {update cs_tickets set cs_open_p='1'
+                }
+            }
+        }
+    }
     return $ticket_id
 }
 

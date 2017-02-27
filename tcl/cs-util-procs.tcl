@@ -390,3 +390,21 @@ ad_proc -private cs_privacy_level {
     }
     return $privacy_level
 }
+
+ad_proc -private cs_ticket_id_of {
+    message_id
+} {
+    Returns ticket_id of message_id.
+    If message_id is a ticket_id, still returns ticket_id.
+    Returns empty string if not found
+} {
+    upvar 1 instance_id instance_id
+    set ticket_id ""
+    if { [qf_is_natural_number $message_id] } {
+        db_0or1row cs_ticket_messages_get_t_id { select ticket_id from cs_ticket_messages 
+            where instance_id=:instance_id
+            and ( post_id=:message_id 
+                  or ticket_id=:message_id ) limit 1 }
+    }
+    return $ticket_id
+}
