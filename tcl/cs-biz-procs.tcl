@@ -127,9 +127,12 @@ ad_proc -private cs_ticket_message_create {
     required args: (ticket_id or ticket_ref ) (message or internal_notes)
     <br/>
     user_id is used only when posting from a scheduled proc.
+    <br/>
+    Returns message_ref or empty string if input doesn't validate.
 } {
     upvar 1 instance_id instance_id
     set success_p 1
+    set message_ref ""
     set p [list ticket_id ticket_ref privacy_level message internal_notes internal_p user_id]
     qf_nv_list_to_vars $args $p
     if { [ns_conn isconnected] } {
@@ -140,6 +143,7 @@ ad_proc -private cs_ticket_message_create {
     set message
     if { $message eq "" && $internal_notes eq "" } {
         set success_p 0
+        ns_log Notice "cs_ticket_message_create.146: input error message '' internal_notes ''"
     }
     if { $ticket_id eq "" && $success_p } { 
         set ticket_or_message_id [cs_id_of_t_ref $ticket_ref]
@@ -155,7 +159,7 @@ ad_proc -private cs_ticket_message_create {
         db_dml 
     ##code
     }
-
+    return $message_ref
 }
 
 
