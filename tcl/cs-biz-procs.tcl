@@ -143,13 +143,14 @@ ad_proc -private cs_ticket_message_create {
     set message
     if { $message eq "" && $internal_notes eq "" } {
         set success_p 0
-        ns_log Notice "cs_ticket_message_create.146: input error message '' internal_notes ''"
+        ns_log Notice "cs_ticket_message_create.146: input error. message '' internal_notes '' instance_id '${instance_id}' "
     }
     if { $ticket_id eq "" && $success_p } { 
         set ticket_or_message_id [cs_id_of_t_ref $ticket_ref]
         # cross-ref to ticket_id
 
         if { $ticket_id eq "" } {
+            ns_log Warning "cs_ticket_message_create.153: instance_id '${instance_id}' ticket_ref '${ticket_ref}' ticket_id ''"
             set success_p 0
         }
     }
@@ -438,10 +439,10 @@ ad_proc -private cs_ticket_unsubscribe {
 }
 
 
-ad_proc -private cs_ticket_subscriptions_change {
+ad_proc -private cs_category_subscriptions {
     args
 } {
-    Change subscriptions for a ticket.
+    Changes subscriptions for a ticket category.
 } {
     upvar 1 instance_id instance_id
     # cs_ticket_subscriptions_change
