@@ -154,11 +154,13 @@ ad_proc -private cs_support_reps_of_cat {
 
 ad_proc -private cs_cat_cs_property_label {
     category_id
+    {default_prop_label "non_assets"}
 } {
-    Returns property_label associated with a category for support reps, or empty string if not available.
+    Returns property_label associated with a category for support reps.
+    If not found, returns default property label (default_prop_label).
 } {
     upvar 1 instance_id instance_id
-    set cs_property_label ""
+    set cs_property_label $default_prop_label
     db_0or1row cs_categories_r_cspl {select cs_property_label from cs_categories 
         where id=:category_id
         and instance_id=:instance_id
@@ -169,11 +171,13 @@ ad_proc -private cs_cat_cs_property_label {
 
 ad_proc -private cs_cat_cc_property_label {
     category_id
+    {default_prop_label "non_assets"}
 } {
     Returns property_label associated with a category for contact reps.
+    If not found, returns default property label (default_prop_label).
 } {
     upvar 1 instance_id instance_id
-    set cc_property_label ""
+    set cc_property_label $default_prop_label
     db_0or1row cs_categories_r_cspl {select cc_property_label from cs_categories 
         where id=:category_id
         and instance_id=:instance_id
@@ -376,3 +380,14 @@ ad_proc -private cs_announcements_agenda {
     }
     return $announcements_lists
 }
+
+
+ad_proc -private cs_categories {
+} {
+    Read categories as a list of lists.
+} {
+    upvar 1 instance_id instance_id
+    ##code
+    return $categories_lists
+}
+

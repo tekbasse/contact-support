@@ -396,6 +396,7 @@ ad_proc -public cs_ticket_open {
     <br/>
     Requires: one of: (ticket_id, ticket_ref, message_ref)
     Optional: cs_tickets.contact_id, user_open_p,cs_open_p,ignore_reopen_p
+    property_label
     If via scheduled procedure, also requires user_id
     <br/>
     @return ticket_id, or empty string if fails.
@@ -403,9 +404,15 @@ ad_proc -public cs_ticket_open {
     upvar 1 instance_id instance_id
     # Remember that it might have been closed (already exists and re-opened)
     # get ticket_id from ticket_ref
-    # Does user have write perission granted by contact for property_label?
-    # property_label is default non_assets
-
+    qf_nv_list_to_vars $args [list \
+                                  ticket_id \
+                                  ticket_ref \
+                                  message_ref \
+                                  user_id \
+                                  contact_id \
+                                  user_open_p \
+                                  cs_open_p \
+                                  ignore_reopen_p ]
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
     } 
@@ -423,11 +430,14 @@ ad_proc -public cs_ticket_open {
     if { $ticket_id ne "" } {
         if { ![qf_is_natural_number $contact_id] || $user_open_p eq "" || $cs_open_p eq "" || $ignore_reopen_p eq "" } {
             set ticket_attr_list [cs_ticket_read $ticket_id]
-            # get ticket's contact_id,user_open_p,cs_open_p,ignore_reopen_p
-            ##code
+            qf_nv_list_to_vars $ticket_attr_list [list contact_id user_open_p cs_open_p ignore_reopen_p ticket_category_id
+]
         }
+        set property_label [cs_cat_cc_property_label $category_id]
+        # Does user have write perission granted by contact for property_label?
         set contact_write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
         if { !$contact_write_p } {
+            set property_label [cs_cat_cs_property_label $category_id]
             set support_write_p [qc_permission_p $user_id $instance_id $property_label write $instance_id]
         } else {
             # choose most external permission when possible
@@ -435,14 +445,20 @@ ad_proc -public cs_ticket_open {
             set support_write_p 0
         }
         if { $contact_write_p || $support_write_p } {
-            
-            
             if { $contact_write_p } {
-                db_dml cs_tickets_contact_open {update cs_tickets set user_open_p='1'
+                if { [qf_is_true $ignore_reopen_p] } {
+                    set new_cs_open_p $cs_open_p
+                } else {
+                    set new_cs_open_p 1
                 }
+                db_dml cs_tickets_contact_open {update cs_tickets set user_open_p='1', cs_open_p=:new_cs_open_p
+                    where ticket_id=:ticket_id
+                    and instance_id=:instance_id}
             } else {
-                db_dml cs_tickets_support_open {update cs_tickets set cs_open_p='1'
-                }
+                # support write
+                db_dml cs_tickets_support_open {update cs_tickets set cs_open_p='1', cs_open_p='1'
+                    where ticket_id=:ticket_id
+                    and instance_id=:instance_id}
             }
         }
     }
@@ -462,7 +478,7 @@ ad_proc -public cs_ticket_close_by_contact {
     return $success_p
 }
 
-ad_proc -public cs_ticket_close_by_rep {
+ad_proc -public cs_ticket_close_by_support {
     args
 } {
     Close ticket by support rep.
@@ -516,16 +532,6 @@ ad_proc -private cs_category_subscriptions {
     return $success_p
 }
 
-
-
-ad_proc -private cs_categories {
-} {
-    Read categories as a list of lists.
-} {
-    upvar 1 instance_id instance_id
-    ##code
-    return $categories_lists
-}
 
 
 
