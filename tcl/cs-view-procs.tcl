@@ -359,7 +359,7 @@ ad_proc -private cs_announcements {
 ad_proc -private cs_announcements_agenda {
     {property_label "non_assets"}
 } {
-    Returns a list of ordered lists of all unexpired and future contact-support announcments 
+    Returns a list of ordered lists of all unexpired and future contact-support announcements 
     <br/>
     ordered fields: id ann_type ticket_id start_timestamp expire_timestamp expired_p allow_html_p announcement
     <br/>
