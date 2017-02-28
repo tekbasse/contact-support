@@ -405,7 +405,7 @@ ad_proc -public cs_ticket_open {
     # get ticket_id from ticket_ref
     # Does user have write perission granted by contact for property_label?
     # property_label is default non_assets
-    ##code
+
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
     } 
@@ -422,6 +422,7 @@ ad_proc -public cs_ticket_open {
 
     if { $ticket_id ne "" } {
         if { ![qf_is_natural_number $contact_id] || $user_open_p eq "" || $cs_open_p eq "" || $ignore_reopen_p eq "" } {
+            set ticket_attr_list [cs_ticket_read $ticket_id]
             # get ticket's contact_id,user_open_p,cs_open_p,ignore_reopen_p
             ##code
         }
