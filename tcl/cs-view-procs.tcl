@@ -202,7 +202,7 @@ ad_proc -private cs_tickets_assigned_to {
 ad_proc -private cs_tickets_subscribed_to {
     {user_id ""}
 } {
-    Lists ticket_ids for a contact rep user_id as a list.
+    Lists ticket_ids for a contact rep of user_id as a list.
 } {
     upvar 1 instance_id instance_id
     # cs_tickets
@@ -384,10 +384,13 @@ ad_proc -private cs_announcements_agenda {
 
 ad_proc -private cs_categories {
 } {
-    Read categories as a list of lists.
+    Returns a list of ordered category fields as a list of lists, or an empty list if none exist.
+    <br/>
+    fields are: id, parent_id, order_value, label, name, active_p, cs_property_label, cc_property_label, description
 } {
     upvar 1 instance_id instance_id
-    ##code
+    set categories_lists [db_list_of_lists cs_categories_list {
+        ##code
+    }]
     return $categories_lists
 }
-
