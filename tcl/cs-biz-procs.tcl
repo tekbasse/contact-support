@@ -144,7 +144,7 @@ ad_proc -private cs_ticket_message_create {
         set posted_by [ad_conn user_id]
     } else {
         if { $user_id eq "" } {
-            set poster_id $instance_id
+            set posted_by $instance_id
         } else {
             set posted_by $user_id
         }
@@ -162,14 +162,20 @@ ad_proc -private cs_ticket_message_create {
         }
     }
     if { $success_p } {
-        set trashed_p 0
-        set privacy_level [cs_privacy_level $privacy_level]
-        set message_id [cs_id_seq_nextval message_ref]
-        # set message_ref  --external reference of message_id (returned by cs_id_seq_nextval)
-        db_dml cs_ticket_messages_cr {insert into cs_ticket_messages
-            (instance_id,post_id,ticket_id,posted_by,post_time,message,privacy_level,internal_notes,internal_p,trashed_p)
-            values (:instance_id,:message_id,:ticket_id,:posted_by,now(),:message,:privacy_level,:internal_notes,:internal_p,:trashed_p)
+        # open ticket if it is closed.
+        set ticket_id_ck [cs_ticket_open ticket_id $ticket_id user_id $posted_by ]
+        if { $ticket_id_ck eq $ticket_id } {
+            set trashed_p 0
+            set privacy_level [cs_privacy_level $privacy_level]
+            set message_id [cs_id_seq_nextval message_ref]
+            # set message_ref  --external reference of message_id (returned by cs_id_seq_nextval)
+            db_dml cs_ticket_messages_cr {insert into cs_ticket_messages
+                (instance_id,post_id,ticket_id,posted_by,post_time,message,privacy_level,internal_notes,internal_p,trashed_p)
+                values (:instance_id,:message_id,:ticket_id,:posted_by,now(),:message,:privacy_level,:internal_notes,:internal_p,:trashed_p)
+            }
+        }
     }
+
     return $message_ref
 }
 
@@ -388,7 +394,8 @@ ad_proc -public cs_ticket_open {
     <br/>
     args: ticket_id ticket_ref message_ref user_id
     <br/>
-    Requires: one of: ticket_id, ticket_ref, message_ref
+    Requires: one of: (ticket_id, ticket_ref, message_ref)
+    Optional: cs_tickets.contact_id, user_open_p,cs_open_p,ignore_reopen_p
     If via scheduled procedure, also requires user_id
     <br/>
     @return ticket_id, or empty string if fails.
@@ -413,21 +420,22 @@ ad_proc -public cs_ticket_open {
         }
     }
 
-        if { $ticket_id ne "" } {
-
+    if { $ticket_id ne "" } {
+        if { ![qf_is_natural_number $contact_id] || $user_open_p eq "" || $cs_open_p eq "" || $ignore_reopen_p eq "" } {
             # get ticket's contact_id,user_open_p,cs_open_p,ignore_reopen_p
-##code
-    set contact_write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
-    if { !$contact_write_p } {
-        set support_write_p [qc_permission_p $user_id $instance_id $property_label write $instance_id]
-    } else {
-        # choose most external permission when possible
-        # to avoid a dual permissioned person accidently re-opening support ticket
-        set support_write_p 0
-    }
-    if { $contact_write_p || $support_write_p } {
-
-
+            ##code
+        }
+        set contact_write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
+        if { !$contact_write_p } {
+            set support_write_p [qc_permission_p $user_id $instance_id $property_label write $instance_id]
+        } else {
+            # choose most external permission when possible
+            # to avoid a dual permissioned person accidently re-opening support ticket
+            set support_write_p 0
+        }
+        if { $contact_write_p || $support_write_p } {
+            
+            
             if { $contact_write_p } {
                 db_dml cs_tickets_contact_open {update cs_tickets set user_open_p='1'
                 }
