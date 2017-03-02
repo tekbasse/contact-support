@@ -467,14 +467,41 @@ ad_proc -public cs_ticket_open {
 
 
 ad_proc -public cs_ticket_close_by_contact {
-    args
+    ticket_id
+    {user_id ""}
 } {
     Close ticket by contact rep.
 } {
     upvar 1 instance_id instance_id
-    set success_p 1
-
-    ##code
+    set success_p 0
+    if { [ns_conn isconnected] } {
+        set user_id [ad_conn user_id]
+    }
+    if { $user_id ne "" } {
+        set nv_list [cs_ticket_read $ticket_id]
+        if { [llength $nv_list] > 0 } {
+            qf_nv_list_to_vars $nv_list user_open_p trashed_p ignore_reopen_p contact_id ticket_category_id
+            if { $user_open_p && !$ignore_reopen_p} {
+                set property_label [cs_cat_cc_property_label $ticket_category_id]
+                # Does user have write perission granted by contact for property_label?
+                set contact_write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
+                if { $contact_write_p } {
+                    db_dml {update cs_tickets set user_open_p='0'
+                        where ticket_id=:ticket_id
+                        and instance_id=:instance_id}
+                    set success_p 1
+                } else {
+                    ns_log Warning "cs_ticket_close_by_contact.488: user doesn not have write_p permission for ticket_id '${ticket_id}' instance_id '${instance_id}' user_id '${user_id}'"
+                }
+            } else {
+                ns_log Notice "cs_ticket_close_by_contact.490: unable to close ticket_id '${ticket_id}'. user_open_p '${user_open_p}' ignore_reopen_p '${ignore_reopen_p}' for instance_id '${instance_id}' user_id '${user_id}'"
+            }
+        } else {
+            ns_log Notice "cs_ticket_close_by_contact.493: ticket_id '${ticket_id}' not found for instance_id '${instance_id}' user_id '${user_id}'"
+        }
+    } else {
+        ns_log Notice "cs_ticket_close_by_contact.502: user_id not supplied for ticket_id '${ticket_id}' instance_id '${instance_id}' user_id '${user_id}'"
+    }
     return $success_p
 }
 
