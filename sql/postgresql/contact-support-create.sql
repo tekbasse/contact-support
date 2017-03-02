@@ -303,6 +303,7 @@ CREATE TABLE cs_categories (
     label            varchar(40),
     name             varchar(80),
     active_p         varchar(1) default '1',
+    trashed_p        varchar(1) default '0',
     -- qc_permission_p qc_property.property_label 
     -- Assume property_label is 'non_asset' unless specified.
     -- This way, categories for contact can be filtered to just those with related role permission
@@ -318,6 +319,7 @@ CREATE TABLE cs_categories (
 
 create index cs_categories_instance_id_idx on cs_categories(instance_id);
 create index cs_categories_id_idx on cs_categories(id);
+create index cs_categories_trashed_p_idx on cs_categories(trashed_p);
 create index cs_categories_label_idx on cs_categories(label);
 create index cs_categories_parent_id_idx on cs_categories(parent_id);
 

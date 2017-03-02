@@ -44,6 +44,7 @@ DROP TABLE cs_contact_rep_ticket_map;
 
 drop index cs_categories_parent_id_idx;
 drop index cs_categories_label_idx;
+drop index cs_categories_trashed_p_idx;
 drop index cs_categories_id_idx;
 drop index cs_categories_instance_id_idx;
 
