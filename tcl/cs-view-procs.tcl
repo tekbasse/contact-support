@@ -384,13 +384,15 @@ ad_proc -private cs_announcements_agenda {
 
 ad_proc -private cs_categories {
 } {
-    Returns a list of ordered category fields as a list of lists, or an empty list if none exist.
+    Returns an unsorted list of ordered category fields as a list of lists, or an empty list if none exist.
     <br/>
     fields are: id, parent_id, order_value, label, name, active_p, cs_property_label, cc_property_label, description
 } {
     upvar 1 instance_id instance_id
-    set categories_lists [db_list_of_lists cs_categories_list {
-        ##code
-    }]
+    set categories_lists [db_list_of_lists cs_categories_list {select id,
+        parent_id,order_value,label,name,active_p,cs_property_label,
+        cc_property_label,description from cs_categories
+        where instance_id=:instance_id
+        and trashed_p!='1'}]
     return $categories_lists
 }
