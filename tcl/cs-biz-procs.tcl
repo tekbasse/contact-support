@@ -466,6 +466,7 @@ ad_proc -public cs_ticket_open {
 }
 
 
+
 ad_proc -public cs_ticket_close_by_contact {
     ticket_id
     {user_id ""}
@@ -480,22 +481,28 @@ ad_proc -public cs_ticket_close_by_contact {
     if { $user_id ne "" } {
         set nv_list [cs_ticket_read $ticket_id]
         if { [llength $nv_list] > 0 } {
-            qf_nv_list_to_vars $nv_list user_open_p trashed_p ignore_reopen_p contact_id ticket_category_id
-            if { $user_open_p && !$ignore_reopen_p} {
+            qf_nv_list_to_vars $nv_list user_open_p cs_open_p trashed_p ignore_reopen_p contact_id ticket_category_id
+            if { $user_open_p } {
                 set property_label [cs_cat_cc_property_label $ticket_category_id]
                 # Does user have write perission granted by contact for property_label?
                 set contact_write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
                 if { $contact_write_p } {
-                    ##code Additionally, close cs_open_p if cs_open_p is 1
-                    db_dml {update cs_tickets set user_open_p='0', user_time_closed=now(),user_closed_by=:user_id
-                        where ticket_id=:ticket_id
-                        and instance_id=:instance_id}
+                    # Additionally, close cs_open_p if cs_open_p is 1
+                    if { $cs_open_p } {
+                        db_dml cs_tickets_close_by_cs_cc {update cs_tickets set user_open_p='0', cs_open_p='0',cs_time_closed=now(),user_time_closed=now(),user_closed_by=:user_id,cs_closed_by=:user_id
+                            where ticket_id=:ticket_id
+                            and instance_id=:instance_id}
+                    } else {
+                        db_dml cs_tickets_close_by_cc {update cs_tickets set user_open_p='0', user_time_closed=now(),user_closed_by=:user_id
+                            where ticket_id=:ticket_id
+                            and instance_id=:instance_id}
+                    }
                     set success_p 1
                 } else {
                     ns_log Warning "cs_ticket_close_by_contact.488: user doesn not have write_p permission for ticket_id '${ticket_id}' instance_id '${instance_id}' user_id '${user_id}'"
                 }
             } else {
-                ns_log Notice "cs_ticket_close_by_contact.490: unable to close ticket_id '${ticket_id}'. user_open_p '${user_open_p}' ignore_reopen_p '${ignore_reopen_p}' for instance_id '${instance_id}' user_id '${user_id}'"
+                ns_log Notice "cs_ticket_close_by_contact.490: unable to close ticket_id '${ticket_id}' Already closed. user_open_p '${user_open_p}' ignore_reopen_p '${ignore_reopen_p}' for instance_id '${instance_id}' user_id '${user_id}'"
             }
         } else {
             ns_log Notice "cs_ticket_close_by_contact.493: ticket_id '${ticket_id}' not found for instance_id '${instance_id}' user_id '${user_id}'"
@@ -526,7 +533,7 @@ ad_proc -public cs_ticket_close_by_support {
                 # Does user have write perission granted by contact for property_label?
                 set contact_write_p [qc_permission_p $user_id $instance_id $property_label write $instance_id]
                 if { $contact_write_p } {
-                    db_dml {update cs_tickets set user_open_p='0', cs_open_p='0',cs_time_closed=now(),user_time_closed=now(),user_closed_by=:user_id,cs_closed_by=:user_id
+                    db_dml cs_tickets_close_by_cs {update cs_tickets set user_open_p='0', cs_open_p='0',cs_time_closed=now(),user_time_closed=now(),user_closed_by=:user_id,cs_closed_by=:user_id
                         where ticket_id=:ticket_id
                         and instance_id=:instance_id}
                     set success_p 1
