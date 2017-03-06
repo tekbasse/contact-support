@@ -552,11 +552,11 @@ ad_proc -public cs_ticket_close_by_support {
     return $success_p
 }
 
-ad_proc -private cs_ticket_subscribe {
+ad_proc -private cs_ticket_subscribe_support_rep {
     ticket_id
     user_id_list
 } {
-    Subscribe user_ids to ticket.
+    Subscribe support_reps to ticket
 } {
     upvar 1 instance_id instance_id
     # subscribe user to ticket_id
@@ -566,11 +566,26 @@ ad_proc -private cs_ticket_subscribe {
     return $success_p
 }
 
-ad_proc -private cs_ticket_unsubscribe {
+
+ad_proc -private cs_ticket_subscribe_contact_rep {
     ticket_id
     user_id_list
 } {
-    Unsubscribe user_ids to ticket.
+    Subscribe support_reps to ticket
+} {
+    upvar 1 instance_id instance_id
+    # subscribe user to ticket_id
+    set success_p 1
+
+    ##code
+    return $success_p
+}
+
+ad_proc -private cs_ticket_unsubscribe_support_rep {
+    ticket_id
+    user_id_list
+} {
+    Unsubscribe support_reps to ticket
 } {
     upvar 1 instance_id instance_id
     # unsubscribe user to ticket_id
@@ -580,6 +595,20 @@ ad_proc -private cs_ticket_unsubscribe {
     return $success_p
 }
 
+
+ad_proc -private cs_ticket_unsubscribe_contact_rep {
+    ticket_id
+    user_id_list
+} {
+    Unsubscribe support_reps to ticket
+} {
+    upvar 1 instance_id instance_id
+    # unsubscribe user to ticket_id
+    set success_p 1
+
+    ##code
+    return $success_p
+}
 
 ad_proc -private cs_category_subscriptions {
     args
