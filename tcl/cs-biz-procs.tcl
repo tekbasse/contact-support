@@ -560,9 +560,29 @@ ad_proc -private cs_ticket_subscribe_support_rep {
 } {
     upvar 1 instance_id instance_id
     # subscribe user to ticket_id
-    set success_p 1
+    set success_p 0
+    if { [qf_is_natural_number $ticket_id] } {
+        if { [hf_natural_number_list_validate $user_id_list] } {
+            if { [ns_conn isconnected ] } {
+                set user_id [ad_conn user_id]
+            } else {
+                set user_id $instance_id
+            }
+            set ticket_atts_list [cs_ticket_read $ticket_id]
+            qf_nv_list_to_vars $ticket_atts_list [list contact_id ticket_category_id privacy_level trashed_p ignore_reopen_p user_open_p opened_by]
+            # if trashed, break
+            # if privacy_level == 9, set user_id_list list opened_by 
+            # if ignore_reopen_p and user_open_p == 0, break
 
-    ##code
+            # set property_label of ticket_category_id
+            foreach uid $user_id_list {
+                # check permission for user_id min is read for property_label
+
+            }
+##code
+        }
+    }
+
     return $success_p
 }
 
