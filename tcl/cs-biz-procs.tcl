@@ -187,81 +187,81 @@ ad_proc -private cs_new_event_announce {
 } {
     if { $scheduled_maint_req_p && $scheduled_operations_p && !$prior_sched_op_p } {
 
-    if { $begins eq "" } {
-        set begins "now"
-    }
-    if { [catch {set begins_ts [clock scan $begins] } result] } {
-        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} begins '${begins}' Error '${result}'"
-        if { [ns_conn isconnected] } {
-            set err_message $begins 
-            append err_message " " $result
-            util_user_message -message $err_message
-            set allow_html_p 0
+        if { $begins eq "" } {
+            set begins "now"
         }
-        set success_p 0
-    } else {
-        set begins_timestamp_utc [clock format $begins_ts -gmt true]
-
-    }
-
-    if { $expiration eq "" && $success_p } {
-        # set default expiration 
-        set expiration_dur [cs_stats_ticket_close 0]
-        set expiration $begins
-        set package_id [ad_conn package_id]
-        if { $expiration_dur eq "" } {
-            append expiration " + " [parameter::get -parameter schedEventDurationSuperDefault -package_id $package_id]
+        if { [catch {set begins_ts [clock scan $begins] } result] } {
+            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} begins '${begins}' Error '${result}'"
+            if { [ns_conn isconnected] } {
+                set err_message $begins 
+                append err_message " " $result
+                util_user_message -message $err_message
+                set allow_html_p 0
+            }
+            set success_p 0
         } else {
-            set expiration_dur_s [parameter::get -parameter schedEventDurationDefault -package_id $package_id]
-            append expiration " + " "${expiration_dur_s} seconds"
+            set begins_timestamp_utc [clock format $begins_ts -gmt true]
+
         }
-    }
-    if { [catch {set expires_ts [clock scan $expiration] } result] } {
-        ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
-        if { [ns_conn isconnected] } {
-            set err_message $expiration 
-            append err_message " " $result
-            util_user_message -message $err_message
-            set allow_html_p 0
+
+        if { $expiration eq "" && $success_p } {
+            # set default expiration 
+            set expiration_dur [cs_stats_ticket_close 0]
+            set expiration $begins
+            set package_id [ad_conn package_id]
+            if { $expiration_dur eq "" } {
+                append expiration " + " [parameter::get -parameter schedEventDurationSuperDefault -package_id $package_id]
+            } else {
+                set expiration_dur_s [parameter::get -parameter schedEventDurationDefault -package_id $package_id]
+                append expiration " + " "${expiration_dur_s} seconds"
+            }
         }
-        set success_p 0
-    } else {
-        set expires_timestamp_utc [clock format $expires_ts -gmt true]
-    }
+        if { [catch {set expires_ts [clock scan $expiration] } result] } {
+            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} expiration '${expiration}' Error '${result}'"
+            if { [ns_conn isconnected] } {
+                set err_message $expiration 
+                append err_message " " $result
+                util_user_message -message $err_message
+                set allow_html_p 0
+            }
+            set success_p 0
+        } else {
+            set expires_timestamp_utc [clock format $expires_ts -gmt true]
+        }
 
 
         set tz [qal_contact_tz $contact_id]
         set begins_ltz [lc_time_utc_to_local $begins_timestamp_utc $tz]    
         set expires_ltz [lc_time_utc_to_local $expires_timestamp_utc $tz]
-    if { [qf_is_natural_number $ticket_id ] } {
-        if { $contact_id_list_len == 1  } {
-            # automatically convert any "ticket_ref" in announcement into a (linked) reference 
-            set ticket_ref [cs_t_ref_of_id $ticket_id]
-            if { $ticket_ref ne "" } {
-                if { $allow_html_p } {
-                    set ticket_ref [cs_ticket_url_of_t_ref $ticket_ref link]
+        if { [qf_is_natural_number $ticket_id ] } {
+            if { $contact_id_list_len == 1  } {
+                # automatically convert any "ticket_ref" in announcement into a (linked) reference 
+                set ticket_ref [cs_t_ref_of_id $ticket_id]
+                if { $ticket_ref ne "" } {
+                    if { $allow_html_p } {
+                        set ticket_ref [cs_ticket_url_of_t_ref $ticket_ref link]
+                    }
+                    regsub -all -- {ticket_ref} $announcement_text $ticket_ref announcement_text
+                    set op_done_p 0
+                    # record in cs_ticket_op_periods
+                    db_dml cs_ticket_op_periods_cr {
+                        insert into cs_ticket_op_periods 
+                        (instance_id,ticket_id,start_ts,end_ts,op_done_p)
+                        values (:instance_id,:ticket_id,:begins_timestamp_utc,:expires_timestamp_utc)
+                    }
+                    set ticket_list [cs_ticket_read $ticket_id]
+                    qf_nv_list_to_vars $ticket_list contact_id
+                    set ticket_contact_id $contact_id
                 }
-                regsub -all -- {ticket_ref} $announcement_text $ticket_ref announcement_text
-                set op_done_p 0
-                # record in cs_ticket_op_periods
-                db_dml cs_ticket_op_periods_cr {
-                    insert into cs_ticket_op_periods 
-                    (instance_id,ticket_id,start_ts,end_ts,op_done_p)
-                    values (:instance_id,:ticket_id,:begins_timestamp_utc,:expires_timestamp_utc)
-                }
-                set ticket_list [cs_ticket_read $ticket_id]
-                qf_nv_list_to_vars $ticket_list contact_id
-                set ticket_contact_id $contact_id
+            } else {
+                # don't share a ticket_ref with other contacts_ids
+                ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} ticket_id '${ticket_id}' ticket_ref withheld. Should not be shared with external contact_id(s)."
+                regsub -all -- {ticket_ref} $announcement_text "#contact-support.ticket_ref_confidential#" announcement_text
+                
             }
-        } else {
-            # don't share a ticket_ref with other contacts_ids
-            ns_log Notice "cs_announcement: instance_id '${instance_id}' user_id '${user_id} ticket_id '${ticket_id}' ticket_ref withheld. Should not be shared with external contact_id(s)."
-            regsub -all -- {ticket_ref} $announcement_text "#contact-support.ticket_ref_confidential#" announcement_text
-            
+        } elseif { $ticket_id ne "" } {
+            ns_log Warning "cs_announcement: instance_id '${instance_id}' user_id '${user_id} ticket_id '${ticket_id}' not valid"
         }
-    } elseif { $ticket_id ne "" } {
-        ns_log Warning "cs_announcement: instance_id '${instance_id}' user_id '${user_id} ticket_id '${ticket_id}' not valid"
-    }
         
         # Operation is just now scheduled. Trigger:
         #  set notifications 
@@ -431,7 +431,7 @@ ad_proc -public cs_ticket_open {
         if { ![qf_is_natural_number $contact_id] || $user_open_p eq "" || $cs_open_p eq "" || $ignore_reopen_p eq "" } {
             set ticket_attr_list [cs_ticket_read $ticket_id]
             qf_nv_list_to_vars $ticket_attr_list [list contact_id user_open_p cs_open_p ignore_reopen_p ticket_category_id
-]
+                                                 ]
         }
         set property_label [cs_cat_cc_property_label $category_id]
         # Does user have write perission granted by contact for property_label?
@@ -686,7 +686,7 @@ ad_proc -private cs_ticket_subscribe_contact_rep {
                                     (instance_id,ticket_id,user_id)
                                     values (:instance_id,:ticket_id,:uid)
                                 }
-                            set success_p $read_p
+                                set success_p $read_p
                             } else {
                                 ns_log Notice "cs_ticket_subscribe_contact_rep.691: user_id '${uid}' not allowed to read ticket '${ticket_id}' instance_id '${instance_id}'. Ignored."
                             }
@@ -710,10 +710,64 @@ ad_proc -private cs_ticket_unsubscribe_support_rep {
     Unsubscribe support_reps to ticket
 } {
     upvar 1 instance_id instance_id
-    # unsubscribe user to ticket_id
-    set success_p 1
+    # subscribe user to ticket_id
+    set success_p 0
+    set write_p 0
+    if { [qf_is_natural_number $ticket_id] } {
+        if { [hf_natural_number_list_validate $user_id_list] } {
+            if { [ns_conn isconnected ] } {
+                set user_id [ad_conn user_id]
+            } else {
+                set user_id $instance_id
+                set write_p 1
+            }
+            set ticket_atts_list [cs_ticket_read $ticket_id]
+            qf_nv_list_to_vars $ticket_atts_list [list contact_id ticket_category_id privacy_level trashed_p ignore_reopen_p user_open_p opened_by]
+            if { !$trashed_p } {
+                # if ignore_reopen_p and user_open_p == 0, break otherwise continue
+                if { !( $ignore_reopen_p && $user_open_p == 0 ) } {
 
-    ##code
+                    # if privacy_level == 9, set user_id_list  opened_by 
+                    if { $privacy_level eq "9" } {
+                        if { $opened_by in $user_id_list } {
+                            set user_id_list [list $opened_by]
+                        } else {
+                            set user_id_list [list ]
+                        }
+                    }
+
+                }
+            }
+            if { [llength $user_id_list ] > 0 } {
+                # get current subscribers
+                set subscribed_users_list [cs_support_reps_of_ticket $ticket_id]
+                if { [llength $user_id_list] > 0 && [llength $subscribed_users_list ] > 0 } {
+                    set delete_uid_list [list ]
+                    foreach uid $user_id_list {
+                        if { $uid in $user_id_list } {
+                            lappend delete_uid_list $uid
+                        }
+                    }
+                    if { [llength $delete_uid_list] > 0 } {
+                        db_dml cs_support_rep_ticket_map_d1 "delete from cs_support_rep_ticket_map
+                                where instance_id=:instance_id
+                                and ticket_id=:ticket_id
+                                and user_id in ([template::util::tcl_to_sql_list $user_id_list])"
+                        values (:instance_id,:ticket_id,:uid)
+                        set success_p 1
+                    } else {
+                        ns_log Notice "cs_ticket_unsubscribe_support_rep.759: no users in '${user_id_list}' are assocated with ticket_id '${ticket_id}' instance_id '${instance_id}'"
+                    }
+                } else {
+                    ns_log Notice "cs_ticket_unsubscribe_support_rep.762: empty value. subscribed_users_list '${subscribed_users_list}' or user_id_list '${user_id_list}' for ticket_id '${ticket_id}' instance_id '${instance_id}'" 
+                }
+            } else {
+                ns_log Notice "cs_ticket_unsubcribe_support_rep.765: validation resulted in no user_ids supplied. ticket_id '${ticket_id}' instance_id '${instance_id}'"
+            }
+        } else {
+            ns_log Notice "cs_ticket_unsubscribe_support_rep.768: user_ids not all natural numbers. user_id_list '${user_id_list}' ticket_id '${ticket_id}' instance_id '${instance_id}'"
+        }
+    }
     return $success_p
 }
 
@@ -767,7 +821,7 @@ ad_proc -private cs_ticket_unsubscribe_contact_rep {
                         db_dml cs_contact_rep_ticket_map_d1 "delete from cs_contact_rep_ticket_map
                                 where instance_id=:instance_id
                                 and ticket_id=:ticket_id
-                                and user_id in ([template:;util::tcl_to_sql_list $user_id_list])"
+                                and user_id in ([template::util::tcl_to_sql_list $user_id_list])"
                         values (:instance_id,:ticket_id,:uid)
                         set success_p 1
                     } else {
