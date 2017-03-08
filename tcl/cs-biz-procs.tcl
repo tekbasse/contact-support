@@ -570,19 +570,45 @@ ad_proc -private cs_ticket_subscribe_support_rep {
             }
             set ticket_atts_list [cs_ticket_read $ticket_id]
             qf_nv_list_to_vars $ticket_atts_list [list contact_id ticket_category_id privacy_level trashed_p ignore_reopen_p user_open_p opened_by]
-            # if trashed, break
-            # if privacy_level == 9, set user_id_list list opened_by 
-            # if ignore_reopen_p and user_open_p == 0, break
+            if { !$trashed_p } {
+                # if ignore_reopen_p and user_open_p == 0, break otherwise continue
+                if { !( $ignore_reopen_p && $user_open_p == 0 ) } {
 
-            # set property_label of ticket_category_id
-            foreach uid $user_id_list {
-                # check permission for user_id min is read for property_label
+                    # if privacy_level == 9, set user_id_list  opened_by 
+                    if { $privacy_level eq "9" } {
+                        if { $opened_by in $user_id_list } {
+                            set user_id_list [list $opened_by]
+                        } else {
+                            set user_id_list [list ]
+                        }
+                    }
 
+                }
             }
-##code
+            if { [llength $user_id_list ] > 0 } {
+
+                # set property_label of ticket_category_id
+                set property_label [cs_cat_cs_property_label $ticket_category_id "non_assets"]
+                # get current subscribers
+                set subscribed_users_list [cs_support_reps_of_ticket $ticket_id]
+                set user_id_list [set_difference_named_v user_id_list $subscribed_users_list]
+                if { [llength $user_id_list] > 0 } {
+                    foreach uid $user_id_list {
+                        # check permission for user_id min is read for property_label
+                        set read_p [qc_permission_p $uid $contact_id $property_label "read" $instance_id]
+                        if { $read_p } {
+                            db_dml cs_support_rep_ticket_map_w1 {
+                                insert into cs_support_rep_ticket_map
+                                (instance_id,ticket_id,user_id)
+                                values (:instance_id,:ticket_id,:uid)
+                            }
+                            set success_p $read_p
+                        }
+                    }
+                }
+            }
         }
     }
-
     return $success_p
 }
 
@@ -591,13 +617,59 @@ ad_proc -private cs_ticket_subscribe_contact_rep {
     ticket_id
     user_id_list
 } {
-    Subscribe support_reps to ticket
+    Subscribe contact_reps to ticket
 } {
     upvar 1 instance_id instance_id
     # subscribe user to ticket_id
-    set success_p 1
+    set success_p 0
+    if { [qf_is_natural_number $ticket_id] } {
+        if { [hf_natural_number_list_validate $user_id_list] } {
+            if { [ns_conn isconnected ] } {
+                set user_id [ad_conn user_id]
+            } else {
+                set user_id $instance_id
+            }
+            set ticket_atts_list [cs_ticket_read $ticket_id]
+            qf_nv_list_to_vars $ticket_atts_list [list contact_id ticket_category_id privacy_level trashed_p ignore_reopen_p user_open_p opened_by]
+            if { !$trashed_p } {
+                # if ignore_reopen_p and user_open_p == 0, break otherwise continue
+                if { !( $ignore_reopen_p && $user_open_p == 0 ) } {
 
-    ##code
+                    # if privacy_level == 9, set user_id_list  opened_by 
+                    if { $privacy_level eq "9" } {
+                        if { $opened_by in $user_id_list } {
+                            set user_id_list [list $opened_by]
+                        } else {
+                            set user_id_list [list ]
+                        }
+                    }
+
+                }
+            }
+            if { [llength $user_id_list ] > 0 } {
+
+                # set property_label of ticket_category_id
+                set property_label [cs_cat_cc_property_label $ticket_category_id "non_assets"]
+                # get current subscribers
+                set subscribed_users_list [cs_contact_reps_of_ticket $ticket_id]
+                set user_id_list [set_difference_named_v user_id_list $subscribed_users_list]
+                if { [llength $user_id_list] > 0 } {
+                    foreach uid $user_id_list {
+                        # check permission for user_id min is read for property_label
+                        set read_p [qc_permission_p $uid $contact_id $property_label "read" $instance_id]
+                        if { $read_p } {
+                            db_dml cs_contact_rep_ticket_map_w1 {
+                                insert into cs_contact_rep_ticket_map
+                                (instance_id,ticket_id,user_id)
+                                values (:instance_id,:ticket_id,:uid)
+                            }
+                            set success_p $read_p
+                        }
+                    }
+                }
+            }
+        }
+    }
     return $success_p
 }
 
