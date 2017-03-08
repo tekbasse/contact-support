@@ -719,10 +719,64 @@ ad_proc -private cs_ticket_unsubscribe_contact_rep {
     Unsubscribe support_reps to ticket
 } {
     upvar 1 instance_id instance_id
-    # unsubscribe user to ticket_id
-    set success_p 1
+    # subscribe user to ticket_id
+    set success_p 0
+    set write_p 0
+    if { [qf_is_natural_number $ticket_id] } {
+        if { [hf_natural_number_list_validate $user_id_list] } {
+            if { [ns_conn isconnected ] } {
+                set user_id [ad_conn user_id]
+            } else {
+                set user_id $instance_id
+                set write_p 1
+            }
+            set ticket_atts_list [cs_ticket_read $ticket_id]
+            qf_nv_list_to_vars $ticket_atts_list [list contact_id ticket_category_id privacy_level trashed_p ignore_reopen_p user_open_p opened_by]
+            if { !$trashed_p } {
+                # if ignore_reopen_p and user_open_p == 0, break otherwise continue
+                if { !( $ignore_reopen_p && $user_open_p == 0 ) } {
 
-    ##code
+                    # if privacy_level == 9, set user_id_list  opened_by 
+                    if { $privacy_level eq "9" } {
+                        if { $opened_by in $user_id_list } {
+                            set user_id_list [list $opened_by]
+                        } else {
+                            set user_id_list [list ]
+                        }
+                    }
+
+                }
+            }
+            if { [llength $user_id_list ] > 0 } {
+                # get current subscribers
+                set subscribed_users_list [cs_contact_reps_of_ticket $ticket_id]
+                if { [llength $user_id_list] > 0 && [llength $subscribed_users_list ] > 0 } {
+                    set delete_uid_list [list ]
+                    foreach uid $user_id_list {
+                        if { $uid in $user_id_list } {
+                            lappend delete_uid_list $uid
+                        }
+                    }
+                    if { [llength $delete_uid_list] > 0 } {
+                        db_dml cs_contact_rep_ticket_map_d1 "delete from cs_contact_rep_ticket_map
+                                where instance_id=:instance_id
+                                and ticket_id=:ticket_id
+                                and user_id in ([template:;util::tcl_to_sql_list $user_id_list])"
+                        values (:instance_id,:ticket_id,:uid)
+                        set success_p 1
+                    } else {
+                        ns_log Notice "cs_ticket_unsubscribe_contact_rep.768: no users in '${user_id_list}' are assocated with ticket_id '${ticket_id}' instance_id '${instance_id}'"
+                    }
+                } else {
+                    ns_log Notice "cs_ticket_unsubscribe_contact_rep.771: empty value. subscribed_users_list '${subscribed_users_list}' or user_id_list '${user_id_list}' for ticket_id '${ticket_id}' instance_id '${instance_id}'" 
+                }
+            } else {
+                ns_log Notice "cs_ticket_unsubcribe_contact_rep.774: validation resulted in no user_ids supplied. ticket_id '${ticket_id}' instance_id '${instance_id}'"
+            }
+        } else {
+            ns_log Notice "cs_ticket_unsubscribe_contact_rep.777: user_ids not all natural numbers. user_id_list '${user_id_list}' ticket_id '${ticket_id}' instance_id '${instance_id}'"
+        }
+    }
     return $success_p
 }
 
