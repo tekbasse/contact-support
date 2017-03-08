@@ -46,6 +46,8 @@
       is somewhat independent between support team and contacts
       to allow for tickets that require contacts to complete
       tasks without additional coordination with cs reps.
+      Here's a case where this feature could alleviate the dichotomy of a binary only solution: 
+      <a href="https://github.com/isaacs/github/issues/583">https://github.com/isaacs/github/issues/583</a>.
       <pre>
         independent ticket state terminology:
         SST = support ticket state (open/closed)
