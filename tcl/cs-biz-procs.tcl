@@ -687,9 +687,15 @@ ad_proc -private cs_ticket_subscribe_contact_rep {
                                     values (:instance_id,:ticket_id,:uid)
                                 }
                             set success_p $read_p
+                            } else {
+                                ns_log Notice "cs_ticket_subscribe_contact_rep.691: user_id '${uid}' not allowed to read ticket '${ticket_id}' instance_id '${instance_id}'. Ignored."
                             }
                         }
+                    } else {
+                        ns_log Notice "cs_ticket_subscribe_contact_rep.695: users already added for ticket_id '${ticket_id}' instance_id '${instance_id}'"
                     }
+                } else {
+                    ns_log Notice "cs_ticket_subscribe_contact_rep.698: user_id '${user_id}' does not have permission to write ticket_id '${ticket_id}' instance_id '${instance_id}' attempted user_id_list '${user_id_list}'"
                 }
             }
         }
