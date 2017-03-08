@@ -561,6 +561,7 @@ ad_proc -private cs_ticket_subscribe_support_rep {
     upvar 1 instance_id instance_id
     # subscribe user to ticket_id
     set success_p 0
+    set write_p 0
     if { [qf_is_natural_number $ticket_id] } {
         if { [hf_natural_number_list_validate $user_id_list] } {
             if { [ns_conn isconnected ] } {
@@ -580,6 +581,7 @@ ad_proc -private cs_ticket_subscribe_support_rep {
                             set user_id_list [list $opened_by]
                         } else {
                             set user_id_list [list ]
+                            ns_log Notice "cs_ticket_subscribe_support_rep.584. privacy_level does not permit users to be added to ticket_id '${ticket_id}' instance_id '${instance_id}'"
                         }
                     }
 
@@ -589,22 +591,35 @@ ad_proc -private cs_ticket_subscribe_support_rep {
 
                 # set property_label of ticket_category_id
                 set property_label [cs_cat_cs_property_label $ticket_category_id "non_assets"]
-                # get current subscribers
-                set subscribed_users_list [cs_support_reps_of_ticket $ticket_id]
-                set user_id_list [set_difference_named_v user_id_list $subscribed_users_list]
-                if { [llength $user_id_list] > 0 } {
-                    foreach uid $user_id_list {
-                        # check permission for user_id min is read for property_label
-                        set read_p [qc_permission_p $uid $contact_id $property_label "read" $instance_id]
-                        if { $read_p } {
-                            db_dml cs_support_rep_ticket_map_w1 {
-                                insert into cs_support_rep_ticket_map
-                                (instance_id,ticket_id,user_id)
-                                values (:instance_id,:ticket_id,:uid)
+
+                if { !$write_p } {
+                    # does user_id have permission to subscribe users?
+                    set write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
+                }
+                if { $write_p } {
+                    # get current subscribers
+                    set subscribed_users_list [cs_support_reps_of_ticket $ticket_id]
+                    set user_id_list [set_difference_named_v user_id_list $subscribed_users_list]
+                    if { [llength $user_id_list] > 0 } {
+                        foreach uid $user_id_list {
+                            # check permission for user_id min is read for property_label
+                            set read_p [qc_permission_p $uid $contact_id $property_label "read" $instance_id]
+                            if { $read_p } {
+                                db_dml cs_support_rep_ticket_map_w1 {
+                                    insert into cs_support_rep_ticket_map
+                                    (instance_id,ticket_id,user_id)
+                                    values (:instance_id,:ticket_id,:uid)
+                                }
+                                set success_p $read_p
+                            } else {
+                                ns_log Notice "cs_ticket_subscribe_support_rep.614: user_id '${uid}' not allowed to read ticket '${ticket_id}' instance_id '${instance_id}'. Ignored."
                             }
-                            set success_p $read_p
                         }
+                    } else {
+                        ns_log Notice "cs_ticket_subscribe_support_rep.615: users already added for ticket_id '${ticket_id}' instance_id '${instance_id}'"
                     }
+                } else {
+                    ns_log Notice "cs_ticket_subscribe_support_rep.617: user_id '${user_id}' does not have permission to write ticket_id '${ticket_id}' instance_id '${instance_id}' attempted user_id_list '${user_id_list}'"
                 }
             }
         }
@@ -622,12 +637,14 @@ ad_proc -private cs_ticket_subscribe_contact_rep {
     upvar 1 instance_id instance_id
     # subscribe user to ticket_id
     set success_p 0
+    set write_p 0
     if { [qf_is_natural_number $ticket_id] } {
         if { [hf_natural_number_list_validate $user_id_list] } {
             if { [ns_conn isconnected ] } {
                 set user_id [ad_conn user_id]
             } else {
                 set user_id $instance_id
+                set write_p 1
             }
             set ticket_atts_list [cs_ticket_read $ticket_id]
             qf_nv_list_to_vars $ticket_atts_list [list contact_id ticket_category_id privacy_level trashed_p ignore_reopen_p user_open_p opened_by]
@@ -650,20 +667,27 @@ ad_proc -private cs_ticket_subscribe_contact_rep {
 
                 # set property_label of ticket_category_id
                 set property_label [cs_cat_cc_property_label $ticket_category_id "non_assets"]
-                # get current subscribers
-                set subscribed_users_list [cs_contact_reps_of_ticket $ticket_id]
-                set user_id_list [set_difference_named_v user_id_list $subscribed_users_list]
-                if { [llength $user_id_list] > 0 } {
-                    foreach uid $user_id_list {
-                        # check permission for user_id min is read for property_label
-                        set read_p [qc_permission_p $uid $contact_id $property_label "read" $instance_id]
-                        if { $read_p } {
-                            db_dml cs_contact_rep_ticket_map_w1 {
-                                insert into cs_contact_rep_ticket_map
-                                (instance_id,ticket_id,user_id)
-                                values (:instance_id,:ticket_id,:uid)
-                            }
+
+                if { !$write_p } {
+                    # does user_id have permission to subscribe users?
+                    set write_p [qc_permission_p $user_id $contact_id $property_label write $instance_id]
+                }
+                if { $write_p } {
+                    # get current subscribers
+                    set subscribed_users_list [cs_contact_reps_of_ticket $ticket_id]
+                    set user_id_list [set_difference_named_v user_id_list $subscribed_users_list]
+                    if { [llength $user_id_list] > 0 } {
+                        foreach uid $user_id_list {
+                            # check permission for user_id min is read for property_label
+                            set read_p [qc_permission_p $uid $contact_id $property_label read $instance_id]
+                            if { $read_p } {
+                                db_dml cs_contact_rep_ticket_map_w1 {
+                                    insert into cs_contact_rep_ticket_map
+                                    (instance_id,ticket_id,user_id)
+                                    values (:instance_id,:ticket_id,:uid)
+                                }
                             set success_p $read_p
+                            }
                         }
                     }
                 }
