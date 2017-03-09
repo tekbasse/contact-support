@@ -51,6 +51,8 @@ CREATE TABLE cs_announcements (
     expired_p             varchar(1),
     -- Answers question: support html in announcement? ie @noquote in template?
     allow_html_p          varchar(1),
+    -- first line of announcement is subject/title delimited by /n
+    -- ie tcl newline indicator
     announcement          text
 );
 
