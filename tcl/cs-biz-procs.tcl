@@ -971,10 +971,22 @@ ad_proc -private cs_announcement_close {
             where ann_id=:ann_id
             and instance_id=:instance_id
             and notify_p=!'0'}]
-        foreach user_id $user_id_list {
 
+        set subject [string range $announcement 0 [string first "\n" $announcement]]
+        set subject [qf_abbreviate $subject 30]
+        # body is announcement
+        set body announcement
+        append body "\n#contact-support.circumstances_ended#"
+        append body "\n#contact-support.You_requested_to_be_notified#"
+        append body "\n#contact-support.No_more_notices_to_be_sent#"
+
+        foreach user_id $user_id_list {
+            set email [party::email -party_id user_id]
+            set locale [qc_user_locale $user_id]
+            # how to translate messages? _ requires connection..
             ##code
             #send a message to these users (no cc...)
+            set 
         }
         db_dml {update cs_announcements set expired_p='1' where id=:ann_id and instance_id=:instance_id}
         db_dml {update cs_ann_user_contact_map_tr set trashed_p='1' where ann_id=:ann_id and instance_id=:instance_id}
