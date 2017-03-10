@@ -975,18 +975,24 @@ ad_proc -private cs_announcement_close {
         set subject [string range $announcement 0 [string first "\n" $announcement]]
         set subject [qf_abbreviate $subject 30]
         # body is announcement
-        set body announcement
-        append body "\n#contact-support.circumstances_ended#"
-        append body "\n#contact-support.You_requested_to_be_notified#"
-        append body "\n#contact-support.No_more_notices_to_be_sent#"
+        set body "\n\n#contact-support.You_requested_to_be_notified#"
+        append body "\n\n#contact-support.circumstances_ended#"
+        append body "\n\n#contact-support.No_more_notices_to_be_sent#"
+        append body "\n\n#contact-support.Original_announcement#:\n\n" $announcement
+
+        set immediate_p 1
+
 
         foreach user_id $user_id_list {
             set email [party::email -party_id user_id]
             set locale [qc_user_locale $user_id]
-            # how to translate messages? _ requires connection..
+            if { ![info exists body_localize(${locale}) ] } {
+                set body_localize(${locale}) [lang::util::localize $body $locale]
+            }
+
             ##code
             #send a message to these users (no cc...)
-            set 
+            acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
         }
         db_dml {update cs_announcements set expired_p='1' where id=:ann_id and instance_id=:instance_id}
         db_dml {update cs_ann_user_contact_map_tr set trashed_p='1' where ann_id=:ann_id and instance_id=:instance_id}
