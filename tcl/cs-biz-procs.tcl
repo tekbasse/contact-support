@@ -982,17 +982,29 @@ ad_proc -private cs_announcement_close {
 
         set immediate_p 1
 
-
+        set locale_list [list]
         foreach user_id $user_id_list {
             set email [party::email -party_id user_id]
             set locale [qc_user_locale $user_id]
             if { ![info exists body_localize(${locale}) ] } {
+                set subject_localize(${locale}) [lang::util::localize $subject $locale]
                 set body_localize(${locale}) [lang::util::localize $body $locale]
+                set users_by_locale_larr(${locale}) [list ]
             }
-
-            ##code
+            if { $email ne "" } {
+                lappend email_by_locale_larr(${locale}) $email
+            }
+        }
+        set locales_list [array names body_localize]
+        foreach locale $locales_list {
             #send a message to these users (no cc...)
-            acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
+            if { [llength $email_by_locale_larr(${locale}) ] > 0 } {
+                acs_mail_lite::send -send_immediately $immediate_p \
+                    -to_addr $email_by_locale_larr(${locale}) \
+                    -from_addr $sysowner_email \
+                    -subject $subject_localize(${locale}) \
+                    -body $body_localize(${locale})
+            }
         }
         db_dml {update cs_announcements set expired_p='1' where id=:ann_id and instance_id=:instance_id}
         db_dml {update cs_ann_user_contact_map_tr set trashed_p='1' where ann_id=:ann_id and instance_id=:instance_id}
