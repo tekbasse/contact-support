@@ -840,21 +840,6 @@ ad_proc -private cs_ticket_unsubscribe_contact_rep {
     return $success_p
 }
 
-ad_proc -private cs_category_subscriptions {
-    args
-} {
-    Changes subscriptions for a ticket category.
-} {
-    upvar 1 instance_id instance_id
-    # cs_ticket_subscriptions_change
-    set success_p 1
-
-    ##code 
-    return $success_p
-}
-
-
-
 
 ad_proc -private cs_notify_contact_reps {
     ticket_id
