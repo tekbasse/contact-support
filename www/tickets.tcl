@@ -1,6 +1,20 @@
 # contact-support/www/tickets.tcl
 
 
+#customer-service/www/tickets
+# This is the agenda page
+
+# if user has open tickets
+# show open tickets
+
+# otherwise show new ticket form
+
+
+#links to show open|closed tickets
+# order by date or topic, search content for keyword/topic
+
+
+
 # INPUTS / CONTROLLER
 
 # set defaults

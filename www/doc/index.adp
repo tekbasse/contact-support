@@ -28,7 +28,7 @@
     <li>
       Documentation from original <a href="ecommerce-cs">ecommerce contact-support feature</a> (for reference only)
     </li><li>
-      <a href="annoucements">Announcements</a>
+      <a href="announcements">Announcements</a>
     </li><li>
       <a href="tickets">Tickets</a>
     <li><a href="sched-ops">Scheduled Operations</a></li>
