@@ -4,8 +4,8 @@
 #customer-service/www/tickets
 # This is the agenda page
 
-# if user has open tickets
-# show open tickets
+# User may have subscribed tickets
+# or tickets assocated with one or more customer.  Choose a customer, then view tickets.
 
 # otherwise show new ticket form
 
@@ -20,15 +20,17 @@
 # set defaults
 
 set title "#contact-support.Contact_Serivce# #contact-support.tickets#"
+set content_html ""
 
 set instance_id [qc_set_instance_id]
 set user_id [ad_conn user_id]
+
 #qc_permission_p user_id contact_id property_label privilege instance_id 
-set read_p [qc_permission_p $user_id $contact_id non_assets read $instance_id]
-set create_p [qc_permission_p $user_id $contact_id non_assets create $instance_id]
-set write_p [qc_permission_p $user_id $contact_id non_assets write $instance_id]
-set admin_p [qc_permission_p $user_id $contact_id non_assets admin $instance_id]
-set delete_p [qc_permission_p  $user_id $contact_id non_assets delete $instance_id]
+#set read_p \[qc_permission_p $user_id $contact_id non_assets read $instance_id\]
+#set create_p \[qc_permission_p $user_id $contact_id non_assets create $instance_id\]
+#set write_p \[qc_permission_p $user_id $contact_id non_assets write $instance_id\]
+#set admin_p \[qc_permission_p $user_id $contact_id non_assets admin $instance_id\]
+#set delete_p \[qc_permission_p  $user_id $contact_id non_assets delete $instance_id\]
 
 set user_message_list [list ]
 
@@ -37,6 +39,13 @@ set form_posted [qf_get_inputs_as_array input_arr hash_check 1]
 qf_array_to_vars input_arr [list contact_id ticket_id mode next_mode submit]
 
 ns_log Notice "tickets.tcl(63): mode $mode next_mode $next_mode"
+
+if { $contact_id eq "" } {
+    set contact_ids_list [qc_contact_ids_for_user $user_id $instance_id]
+}
+
+set tickets_subscribed_list [cs_tickets_subscribed_to $user_id]
+
 
 # Notes from requirements:
 # tickets shows tickets subscribed to or open or closed
