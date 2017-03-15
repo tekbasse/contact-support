@@ -186,6 +186,30 @@ ad_proc -private cs_cat_cc_property_label {
     return $cc_property_label
 }
 
+ad_proc -private cs_tickets {
+    contact_id_list
+} {
+    Returns a list of records of cs_tickets where for contacts with contact_id in contact_ids_list,
+    where each record consists of an ordered list of field values.
+    </br>
+    field names: ticket_id instance_id contact_id authenticated_by ticket_category_id current_tier_level subject cs_open_p opened_by cs_time_opened cs_time_closed cs_closed_by user_open_p user_time_opened user_time_closed user_closed_by privacy_level trashed_p ignore_reopen_p unscheduled_service_req_p scheduled_maint_req_p priority
+} {
+    upvar 1 instance_id instance_id
+    set nv_lists [list ]
+    if { [hf_natural_number_list_validate $contact_id_list] } {
+        set nv_lists [db_list_of_lists cs_tickets_r_n "select ticket_id,instance_id,contact_id, \
+        authenticated_by,ticket_category_id,current_tier_level,subject, \
+        cs_open_p,opened_by,cs_time_opened,cs_time_closed,cs_closed_by, \
+        user_open_p,user_time_opened,user_time_closed,user_closed_by, \
+        privacy_level,trashed_p,ignore_reopen_p,unscheduled_service_req_p, \
+        scheduled_maint_req_p,priority \
+        from cs_tickets \
+        where instance_id=:instance_id \
+        and contact_id in ([template::util::tcl_to_sql_list ${contact_id_list} ])"]
+    }
+    return $nv_lists
+}
+
 ad_proc -private cs_tickets_assigned_to {
     {user_id ""}
 } {
@@ -267,11 +291,11 @@ ad_proc -private cs_stats_ticket_close {
     return $etr_time
 }
 
-   
+
 ad_proc -private cs_ticket_read {
     ticket_id
 } {
-    Reads a record from cs_tickets. Returns a name value list.
+    Reads a record from cs_tickets in name value list format, or empty list if not found.
 } {
     upvar 1 instance_id instance_id
 
