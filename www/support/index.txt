@@ -1,0 +1,3 @@
+This is where support UI goes.
+
+/admin is for package admins only.
