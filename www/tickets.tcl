@@ -36,26 +36,44 @@ set user_message_list [list ]
 
 set form_posted [qf_get_inputs_as_array input_arr hash_check 1]
 
-qf_array_to_vars input_arr [list contact_id ticket_id mode next_mode submit]
+qf_array_to_vars input_arr [list contact_id mode next_mode submit]
 
 ns_log Notice "tickets.tcl(63): mode $mode next_mode $next_mode"
 
-if { $contact_id eq "" } {
+if { [qf_is_natural_number $contact_id] } {
+    set contact_ids_list [list $contact_id]
+    set contact_id_p 1
+} else {
+    set contact_id ""
     set contact_ids_list [qc_contact_ids_for_user $user_id $instance_id]
+    set contact_id_p 0
 }
 
-set tickets_subscribed_list [cs_tickets_subscribed_to $user_id]
+set tickets_subscribed_list [cs_tickets_subscribed_to $user_id ]
 
+# full_tickets_list may be focused to one contact_id, or all
+set full_open_tickets_list [cs_tickets $contact_ids_list]
 
+set 
 # Notes from requirements:
-# tickets shows tickets subscribed to or open or closed
+# tickets shows tickets subscribed to not
+# list of tickets may be open only, or all with critera, such as start date, end date, search closed
 
 
 # Modes are views, or one of these compound action/views
 
 # Actions
+#  mode s = process a search within scope of a contact_id
+#       begin date
+#       end_date
+#       closed_ticket_only_p
+#       open_ticket_only_p
+#       q = search string
+#  mode w = bulk un/subscribe 
 
 # Views
+#  mode v = view, scope of 1 contact_id
+#  mode V = view, all contact_id, open tickets only
 
 if { $form_posted } {
     if { [info exists input_arr(x) ] } {
