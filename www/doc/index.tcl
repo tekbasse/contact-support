@@ -1,3 +1,3 @@
-set title "#contact-support.Contact-Support#"
+set title "#contact-support.Contact_Support#"
 set context [list $title]
 
