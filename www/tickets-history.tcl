@@ -56,18 +56,21 @@ set tickets_subscribed_list [cs_tickets_subscribed_to $user_id ]
 # full_tickets_list may be focused to one contact_id, or all
 set full_open_tickets_list [cs_tickets $contact_ids_list]
 
-
+set 
 # Notes from requirements:
 # tickets shows tickets subscribed to not
-# list of tickets may be open only
+# list of tickets may be open only, or all with critera, such as start date, end date, search closed
 
 
 # Modes are views, or one of these compound action/views
 
 # Actions
-#  mode s = sort
-#       cronological
-#       reverse cronological
+#  mode s = process a search within scope of a contact_id
+#       begin date
+#       end_date
+#       closed_ticket_only_p
+#       open_ticket_only_p
+#       q = search string
 #  mode w = bulk un/subscribe 
 
 # Views
