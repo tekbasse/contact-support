@@ -97,8 +97,33 @@ if { $contact_ids_list_len > 0 } {
     
     
     set tickets_subscribed_list [cs_tickets_subscribed_to $user_id ]
-    #field names: ticket_id instance_id contact_id authenticated_by ticket_category_id current_tier_level subject cs_open_p opened_by cs_time_opened cs_time_closed cs_closed_by user_open_p user_time_opened user_time_closed user_closed_by privacy_level trashed_p ignore_reopen_p unscheduled_service_req_p scheduled_maint_req_p priority 
-
+    #field names: 
+# 0 ticket_id
+#  instance_id
+# 2 contact_id
+#  authenticated_by
+# 4 ticket_category_id
+#  current_tier_level
+#  subject
+#  cs_open_p
+#  opened_by
+# 9 cs_time_opened
+#  cs_time_closed
+#  cs_closed_by
+#  user_open_p
+# 13 user_time_opened
+#  user_time_closed
+#  user_closed_by
+#  privacy_level
+#  trashed_p
+#  ignore_reopen_p
+#  unscheduled_service_req_p
+#  scheduled_maint_req_p
+# 21 priority
+#  for open_tickets_w_atts_list add:
+# 22 read_p
+# 23 subscribed_p
+# 24 created_timestamp
     # full_tickets_list may be focused to one contact_id, or all
     set full_open_tickets_list [cs_tickets $focus_contact_ids_list]
 
@@ -130,17 +155,40 @@ if { $contact_ids_list_len > 0 } {
             lappend fot_new $prop_label(${category_id})
             set tik_id [lindex $fot 0]
             if { $tik_id in $tickets_subscribed_list } {
-                lappend fot_new "subscribed"
+                lappend fot_new 1
             } else {
-                lappend fot_new "notsubscribed"
+                lappend fot_new 0
             }
+            set cs_time_opened [lindex $fot 9]
+            set cc_time_opened [lindex $fot 13]
+            if { $cc_time_opened ne "" && $cs_time_opened ne "" } {
+                set cc_opened_ts [clock scan $cs_time_opened]
+                set cs_opened_ts [clock scan $cc_time_opened]
+                if { $cs_opened_ts < $cc_opened_ts } {
+                    set opened_ts $cs_opened_ts 
+                } else {
+                    set opened_ts $cc_opened_ts
+                }
+            } elseif { $cc_time_opened ne "" } {
+                set opened_ts [clock scan $cc_time_opened]
+            } elseif { $cs_time_opened ne "" } {
+                set opened_ts [clock scan $cs_time_opened]
+            } else {
+                # shouldn't happen
+                ns_log Notice "contact-support/www/tickets.tcl.178: no opened_s for ticket_id '${tik_id} cc_opened_ts '${cc_opened_ts}' cs_opened_ts '${cs_opened_ts}'"
+                set opened_ts [clock scan [clock clicks]]
+            }
+            lappend fot_new $opened_ts
+
             lappend open_tickets_w_atts_list $fot_new
         }
 
     }
+
+    set open_tickets_w_atts_sorted_list [lsort -index 24 -integer -increasing $open_tickets_w_atts_list]
+
     # Notes from requirements:
-    # tickets shows tickets subscribed to not
-    # list of tickets may be open only
+    # tickets shows tickets subscribed to and open tickets readable by user
 
 
     # Modes are views, or one of these compound action/views
@@ -149,6 +197,7 @@ if { $contact_ids_list_len > 0 } {
     #  mode s = sort
     #       cronological
     #       reverse cronological
+    #       priority (default)
     #  mode w = bulk un/subscribe 
 
     # Views
