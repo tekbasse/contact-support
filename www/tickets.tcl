@@ -40,25 +40,7 @@ set user_message_list [list ]
 set contact_ids_list [qc_contact_ids_for_user $user_id $instance_id]
 set contact_ids_list_len [llength $contact_ids_list]
 if { $contact_ids_list_len > 0 } {
-    set contacts_exist_p 1
-    if { [qf_is_natural_number $contact_id] && $contact_id in $contact_ids_list } {
-        set contact_ids_list [list $contact_id]
-        set contact_id_p 1
-    } else {
-        set contact_id ""
-        #contact_id_list already set
-        set contact_id_p 0
-    }
 
-} else {
-    # user not associated with a contact_id
-    set contacts_exist_p 0
-    set mode ""
-    set next_mode ""
-}
-
-if { $contacts_exist_p } {
-    
     set form_posted [qf_get_inputs_as_array input_arr hash_check 1]
     qf_array_to_vars input_arr [list contact_id mode next_mode submit]
     
@@ -69,9 +51,16 @@ if { $contacts_exist_p } {
         if { [info exists input_arr(y) ] } {
             unset input_arr(y)
         }
-        
+
         set validated_p 0
         # validate input
+        if { [qf_is_natural_number $contact_id] && $contact_id in $contact_ids_list } {
+            set contact_id_p 1
+        } else {
+            set contact_id ""
+            #contact_id_list already set
+            set contact_id_p 0
+        }
         # else should default to 404 at switch in View section.
         
         # validate input values for specific modes
