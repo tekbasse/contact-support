@@ -56,10 +56,12 @@ if { $contact_ids_list_len > 0 } {
         # validate input
         if { [qf_is_natural_number $contact_id] && $contact_id in $contact_ids_list } {
             set contact_id_p 1
+            set focus_contact_ids_list [list $contact_id]
         } else {
             set contact_id ""
             #contact_id_list already set
             set contact_id_p 0
+            set focus_contact_ids_list $contact_ids_list
         }
         # else should default to 404 at switch in View section.
         
@@ -95,12 +97,47 @@ if { $contact_ids_list_len > 0 } {
     
     
     set tickets_subscribed_list [cs_tickets_subscribed_to $user_id ]
-    
+    #field names: ticket_id instance_id contact_id authenticated_by ticket_category_id current_tier_level subject cs_open_p opened_by cs_time_opened cs_time_closed cs_closed_by user_open_p user_time_opened user_time_closed user_closed_by privacy_level trashed_p ignore_reopen_p unscheduled_service_req_p scheduled_maint_req_p priority 
 
     # full_tickets_list may be focused to one contact_id, or all
-    set full_open_tickets_list [cs_tickets $contact_ids_list]
+    set full_open_tickets_list [cs_tickets $focus_contact_ids_list]
 
 
+    # sort primarily by contact_id:
+    #if { !$contact_id_p } {
+    #    set full_open_tickets_list \[lsort -index 2 -integer $full_open_tickets_list\]
+    #}
+    foreach c_id $focus_contact_ids_list {
+        set user_roles_larr(${c_id}) [qc_roles_of_user_contact_id $user_id $c_id $instance_id]
+        foreach $role_id $user_roles_larr(${c_id}) {
+            set user_role_exists_p(${$c_id},${role_id}) 1
+        }
+    }
+
+    # create new ticket_list_with_attributes
+    set open_tickets_w_atts_list [list ]
+    foreach fot $full_open_tickets_list {
+        set c_id [lindex $fot 2]
+        set category_id [lindex $fot 4]
+        if { ![info exists prop_label(${category_id})] } {
+            set property_label [cs_cat_cc_property_label $category_id]
+        }
+        if { ![info exists label_read_p(${c_id},${property_label}) ] } {
+            set label_read_p(${c_id},${property_label}) [hf_perimission_p $user_id $c_id $property_label read $instance_id]
+        }
+        if { $label_read_p(${c_id},${property_label}) } {
+            set fot_new $fot
+            lappend fot_new $prop_label(${category_id})
+            set tik_id [lindex $fot 0]
+            if { $tik_id in $tickets_subscribed_list } {
+                lappend fot_new "subscribed"
+            } else {
+                lappend fot_new "notsubscribed"
+            }
+            lappend open_tickets_w_atts_list $fot_new
+        }
+
+    }
     # Notes from requirements:
     # tickets shows tickets subscribed to not
     # list of tickets may be open only
