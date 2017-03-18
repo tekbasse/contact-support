@@ -5,7 +5,7 @@
 
 # set defaults
 
-set title "#contact-support.Contact_Serivce# #contact-support.tickets#"
+set title "#contact-support.Contact_Support# #contact-support.tickets#"
 
 set instance_id [qc_set_instance_id]
 set user_id [ad_conn user_id]

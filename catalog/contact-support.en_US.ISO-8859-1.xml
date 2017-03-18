@@ -23,6 +23,8 @@
 <msg key="ticket">ticket</msg>
 <msg key="ticket_ref_confidential">(Ticket reference withheld.)</msg>
 <msg key="tickets">tickets</msg>
+<msg key="Tickets">Tickets</msg>
+<msg key="Ticket history">Ticket history</msg>
 <msg key="unassign">unassign</msg>
 <msg key="unsubscribe">unsubscribe</msg>
 </message_catalog>

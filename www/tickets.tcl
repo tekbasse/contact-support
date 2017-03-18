@@ -1,7 +1,7 @@
 # contact-support/www/tickets.tcl
 
 
-#customer-service/www/tickets
+#customer-support/www/tickets
 # This is the agenda page
 
 # User may have subscribed tickets
@@ -19,7 +19,7 @@
 
 # set defaults
 
-set title "#contact-support.Contact_Serivce# #contact-support.tickets#"
+set title "#contact-support.tickets#"
 set content_html ""
 
 set instance_id [qc_set_instance_id]
@@ -174,11 +174,12 @@ if { $contacts_exist_p } {
         }
     } 
 
-    set context [list $title]
+
 
 
 } else {
-    set context_html "<p><strong>#q-control.You_don_t_have_permission#</strong></p>\n"
-    append context_html "<p>#q-control.You_have_not_been_assigned_to_a_contact#</p>"
+    set content_html "<p><strong>#q-control.You_don_t_have_permission#</strong></p>\n"
+    append content_html "<p>#q-control.You_have_not_been_assigned_to_a_contact#</p>"
 }
 
+set context [list $title]

@@ -1,7 +1,7 @@
-# contact-support/www/tickets.tcl
+# contact-support/www/tickets-history.tcl
 
 
-#customer-service/www/tickets
+#customer-support/www/tickets-history
 # This is the agenda page
 
 # User may have subscribed tickets
@@ -19,7 +19,7 @@
 
 # set defaults
 
-set title "#contact-support.Contact_Serivce# #contact-support.tickets#"
+set title "#contact-support.Ticket_history#"
 set content_html ""
 
 set instance_id [qc_set_instance_id]
