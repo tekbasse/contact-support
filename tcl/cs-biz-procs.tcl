@@ -318,7 +318,7 @@ ad_proc -private cs_announcement_create {
 
     if { $success_p } {
         set id [db_nextval cs_id_seq]
-        # relatives okay with: clock format \[clock scan "now + 3 days"\]
+        # relatives okay with form: clock scan "now + 3 days"
         # relative vocabulary includes year, month, week, day, hours, today, now 
         db_dml cs_announcements_cr {insert into cs_announcements
             (instance_id,id,ann_type,ticket_id,expire_timestamp,expired_p,announcement,allow_html_p)
