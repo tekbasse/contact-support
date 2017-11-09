@@ -72,11 +72,11 @@
     </li><li>
       ticket thread has reference by ticket#/message# or ticket_nbr-message_nbr.
     </li><li>
-      ticket number is unqiue alphanumeric reference to hide system ticket and message number, based on open timestamp.
+      ticket number is unique alphanumeric reference to hide system ticket and message number, based on open timestamp.
     </li><li>
       create a feedback package to integrate reviews of support (later)
     </li><li>
-      Show stats (avg/min/max) response time over day/week/year of contact as well as support to antcipate response timing.
+      Show stats (avg/min/max) response time over day/week/year of contact as well as support to anticipate response timing.
     </li><li>
       Show stats (avg/min/max) time to final ticket closing to help anticipate total down/recovery time.
     </li><li>
