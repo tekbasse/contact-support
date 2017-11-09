@@ -3,7 +3,7 @@ Contact Support
 
 For the latest updates to this readme file, see: http://openacs.org/xowiki/contact-support
 
-The lastest version of the code is available at the development site:
+The latest version of the code is available at the development site:
  http://github.com/tekbasse/contact-support
 
 introduction
