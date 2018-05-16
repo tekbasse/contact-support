@@ -55,20 +55,23 @@
         When contact opens ticket, both CST and SST are opened for triage.
         When contact closes ticket, both CST and SST are closed.
         When support closes ticket, both CST and SST are closed
-        When contact re-opens ticket or replies to ticket, ticket is triaged again by first tier.
-        When support triages ticket, and more info needed by contact,
-        ticket is SST is closed, CST remains open.
-        When support triages new ticket, 
-        qualified ticket remains open for both CST & SST.
-        support categories and assigns ticket to a tier level and priority if different than default.
+
+        When contact re-opens ticket or replies to ticket, 
+        ticket is triaged again by first tier of support.
+        If more info is needed by contact, ticket is closed for SST and CST.
+        If ticket is inter-communications between contact's representatives,
+        ticket is closed for SST, and remains open for CST.
+
+        Support categorizes and assigns ticket to a tier level and priority 
+        if different than default or one provided by contact.
         When support triages a previously closed ticket,
         qualified ticket remains open for both CST & SST, and
         notifications sent to previously assigned reps.
-        Otherwise SST is closed (with message sent to contact stating no support response needed).
-        Contact asked to close CST ticket when they are finished with the topic internally.
+        Otherwise SST is closed again (with message sent to contact stating no support response needed).
+        Contact is asked to close CST ticket when they are finished with the topic internally.
       </pre>
     </li><li>
-      URL to ticket or ticket/message
+      URL to ticket or ticket/message#
     </li><li>
       ticket thread has reference by ticket#/message# or ticket_nbr-message_nbr.
     </li><li>
