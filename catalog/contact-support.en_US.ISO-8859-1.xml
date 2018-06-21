@@ -3,6 +3,8 @@
 <msg key="Allow_HTML_">Allow HTML?</msg>
 <msg key="Announcement">Announcement</msg>
 <msg key="Announcements">Announcements</msg>
+<msg key="Contact">Contact</msg>
+<msg key="Contacts">Contacts</msg>
 <msg key="Contact_Support">Contact Support</msg>
 <msg key="Contact_us">Contact us.</msg>
 <msg key="Contact_us_if_you_have_question">If you have a question, contact us.</msg>
@@ -14,6 +16,7 @@
 <msg key="Last_Modified">Last Modified</msg>
 <msg key="No_more_notices_to_be_sent">No more notices will be sent about this.</msg>
 <msg key="Start">Start</msg>
+<msg key="Support">Support</msg>
 <msg key="Ticket history">Ticket history</msg>
 <msg key="Ticket">Ticket</msg>
 <msg key="Tickets">Tickets</msg>

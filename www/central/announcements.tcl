@@ -1,5 +1,5 @@
-set title "Announcements"
-set context [list [list index "Documentation"] $title]
+set title "#contact-support.Announcements#"
+set context [list [list index "#contact-support.Support#"] $title]
 
 # Announcements mainly refers to 
 # service announcements that support reps may use
