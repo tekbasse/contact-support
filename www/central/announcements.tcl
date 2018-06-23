@@ -1,6 +1,12 @@
 set title "#contact-support.Announcements#"
 set context [list [list index "#contact-support.Support#"] $title]
 
+# show list of active annoucements, 
+# an expire button for each, 
+# and link for each to the associated ticket itself
+
+
+
 # Announcements mainly refers to 
 # service announcements that support reps may use
 # to reach users that visit the contact-support package.

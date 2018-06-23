@@ -5,15 +5,16 @@
 <pre>
 present choices:
 
-My tickets: show order by priority, includes unassigned tickets if any.
+<a href="tickets">#contact-support.tickets#</a>
 
-Customers: Show list of customers (to focus to customer tickets)
+<a href="contacts">#contact-support.contacts#</a>
 
-categories: show list of categories (fo focus to open tickets in category)
+<a href="categories">#contact-support.categories#</a>
 
-show list of active annoucements, an expire button for each, (and link for each for more info on who its assigned to)
+<a href="announcements">#contact-support.announcements#</a>
 
-Each list of tickets have option to include closed tickets.
+
+
 
 
 
