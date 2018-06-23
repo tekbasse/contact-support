@@ -18,9 +18,13 @@ set context [list [list index "#contact-support.Support#"] $title]
 
 set instance_id [ad_conn package_id ]
 
-set id_list [cs_announcement_ids ]
+set input_array(s) "2"
+set input_array(p) ""
+set input_array(this_start_row) ""
+set form_posted_p [qf_get_inputs_as_array input_array]
 
-set headings_list [ \
+
+set headings_list [list \
                         "#contact-support.ID" \
                         "#acs-kernel.common_Type#" \
                         "#acs-datetime.Start#" \
@@ -29,12 +33,33 @@ set headings_list [ \
                         "#contact-support.Allow_HTML_#" \
                         "#contact-support.Announcement#" ]
 
-set announcements_lists [cs_announcements $id_list]
+set id_list [cs_announcement_ids ]
+
+set a_lists [cs_announcements $id_list]
 # id ann_type ticket_id start_timestamp expire_timestamp expired_p allow_html_p announcement
 
 # agenda_lists:
 # id, ann_type, ticket_id, start_timestamp, expire_timestamp, expired_p,allow_html_p,announcement
 # where expired != 1
-set non_assets_agenda_lists [cs_announcements_agenda "non_assets" ]
-set assets_agenda_lists [cs_announcements "assets" ]
+set a_non_assets_lists [cs_announcements_agenda "non_assets" ]
+set a_assets_lists [cs_announcements "assets" ]
+set announcements_lists [concat $a_lists $a_non_assets_lists $a_assets_lists ]
 
+set sort_type_list [list \
+                        "-integer" \
+                        "-ascii" \
+                        "-dictionary" \
+                        "-dictionary" \
+                        "-integer" \
+                        "-integer" \
+                        "-ignore" ]
+
+qfo_sp_table_g2 \
+    -table_lists_varname announcements_lists \
+    -table_html_varname announcements_html \
+    -p_varname input_array(p) \
+    -s_varname input_array(s) \
+    -titles_list_varname headings_list \
+    -titles_html_list_varname headings_html \
+    -sort_type_list $sort_type_list \
+    -this_start_row $input_array(this_start_row)
