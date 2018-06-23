@@ -42,7 +42,7 @@ set a_lists [cs_announcements $id_list]
 # id, ann_type, ticket_id, start_timestamp, expire_timestamp, expired_p,allow_html_p,announcement
 # where expired != 1
 set a_non_assets_lists [cs_announcements_agenda "non_assets" ]
-set a_assets_lists [cs_announcements "assets" ]
+set a_assets_lists [cs_announcements_agenda "assets" ]
 set announcements_lists [concat $a_lists $a_non_assets_lists $a_assets_lists ]
 
 set sort_type_list [list \
